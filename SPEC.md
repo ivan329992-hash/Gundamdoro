@@ -1,18 +1,20 @@
 # Gundamdoro MVP Specification
 
-> Version: v0.1 MVP  
+> Version: v0.1 MVP + approved hangar, multiple-model and inventory extensions; custom assembly paused
 > Platform: Windows desktop  
 > Status: Ready for development
 
 ## 1. Product goal
 
-Gundamdoro combines a Pomodoro timer with staged mecha assembly.
+Gundamdoro combines a Pomodoro timer with collecting mecha parts and a user-triggered final assembly.
 
-Each completed focus session advances the current mecha by exactly one assembly stage. The MVP validates one question:
+Each completed focus session unlocks exactly one independent part. The MVP validates one question:
 
-> Does seeing a mecha gradually assemble make the user want to start another focus session?
+> Does collecting visible mecha parts make the user want to start another focus session?
 
-The first built-in mecha requires 6 completed focus sessions.
+The first built-in mecha requires 5 completed focus sessions. After collecting all parts, the user clicks Assemble whenever ready; final assembly requires no additional focus session.
+
+Every finished build is automatically saved as a distinct local hangar record. Build Again starts a new collection while retaining all previously completed builds. The hangar is keyed by model ID so future models can use the same storage and display flow.
 
 ## 2. MVP scope
 
@@ -22,15 +24,17 @@ The first built-in mecha requires 6 completed focus sessions.
 - 25-minute focus timer
 - 5-minute break timer
 - Pause / resume / cancel
-- 6-stage mecha assembly
-- Assembly transition after each completed focus session
-- Break scene after non-final assembly stages
-- Complete screen after stage 6
+- Five independent collectible parts in persistent display slots
+- Part reveal after each completed focus session
+- Break scene after the first four part reveals, with End Break
+- Manual final assembly and Complete screen after collecting all five parts
 - Persistent local state
 - Correct recovery after app restart
 - Configurable focus and break duration
 - Local-only assets
 - Windows build artifact
+- Persistent local hangar of completed builds, accessible from READY and COMPLETE
+- Selection between six original built-in mecha and one user-supplied unofficial fan-art model, with model-specific parts and final images
 
 ### Explicit non-goals
 
@@ -49,7 +53,7 @@ Do not implement in v0.1:
 - Multi-device support
 - Complex 3D, WebGL, Live2D, Spine, or skeletal animation
 - Auto-update
-- Multi-mecha collection / hangar
+- External model-import UI (future work)
 
 ## 3. Fixed technology stack
 
@@ -75,6 +79,7 @@ Allowed phases:
 type AppPhase =
   | "READY"
   | "FOCUS"
+  | "PART_REWARD"
   | "ASSEMBLY"
   | "BREAK"
   | "COMPLETE";
@@ -83,21 +88,23 @@ type AppPhase =
 Allowed transitions:
 
 ```text
-READY
-  -> FOCUS
-  -> ASSEMBLY
-       -> BREAK -> READY
-       -> COMPLETE
+READY -> FOCUS -> PART_REWARD
+                   -> BREAK -> READY (parts 1-4)
+                   -> READY (part 5; collection complete)
+READY (all parts collected) -> click Assemble -> ASSEMBLY -> COMPLETE
 ```
 
 Rules:
 
-- READY -> FOCUS only when the user starts a focus session.
-- FOCUS -> ASSEMBLY only when the focus timer completes.
-- ASSEMBLY -> BREAK when currentStage < totalStages.
-- ASSEMBLY -> COMPLETE when currentStage === totalStages.
-- BREAK -> READY when the break timer completes.
+- READY -> FOCUS only when the user starts a focus session and there are uncollected parts.
+- FOCUS -> PART_REWARD only when the focus timer completes; show the newly collected detached part.
+- PART_REWARD -> BREAK for parts 1-4. The fifth reveal returns to READY with Assemble enabled, without a break.
+- READY -> ASSEMBLY only through the user's Assemble click after all five parts are collected. ASSEMBLY -> COMPLETE after final animation.
+- BREAK -> READY when the timer completes or the user clicks End Break. Preserve parts and focus totals.
 - Break completion must never auto-start a new focus session.
+- Manual assembly must not increment completed sessions, collected parts, or focused minutes.
+- ASSEMBLY -> COMPLETE atomically archives this build once, using its persistent `currentBuildId`.
+- The hangar is a separate read-only view available in READY/COMPLETE, not a timer phase. Opening or closing it does not change product state.
 
 UI components must not mutate phase directly. State transitions must happen through Zustand actions.
 
@@ -159,6 +166,12 @@ endAt = Date.now() + remainingMs;
 status = "running";
 ```
 
+### Timer completion ownership
+
+When a running timer has `endAt <= Date.now()`, the timer tick or startup recovery must call the corresponding completion action with the timer's `sessionId` when the timer is a focus timer. The completion action owns the state transition; UI components must not mutate `phase` directly.
+
+The same completion path is used for live expiry and restart recovery. Repeated calls are safe because `completeFocus` is idempotent by `sessionId`.
+
 ## 6. Idempotent focus completion
 
 Every focus session gets:
@@ -179,9 +192,19 @@ Before processing a completed focus session:
 if (sessionId === lastProcessedFocusSessionId) return;
 ```
 
-Only after this check may the app increment the assembly stage.
+Only after this check may the app increment the collected-part count (`assembly.currentStage`).
 
 This prevents duplicate progress after rerenders, restart recovery, duplicated callbacks, or sleep/wake behavior.
+
+`completeFocus(sessionId)` must atomically perform these operations after the idempotency check:
+
+1. Set `lastProcessedFocusSessionId` to `sessionId`.
+2. Increase `assembly.currentStage` by one, capped at the five collectible parts (`totalStages`).
+3. Increase `assembly.completedFocusSessions` by one.
+4. Add the session's captured `timer.durationMs / 60000` to `totalFocusedMinutes`.
+5. Clear the expired timer and enter PART_REWARD.
+
+The action must ignore a null, unknown, or already processed `sessionId`. Canceling a session must never call `completeFocus`.
 
 ## 7. Persistence and recovery
 
@@ -192,10 +215,12 @@ Persist at minimum:
 - phase
 - timer state
 - assembly state
+- total focused minutes
 - settings
 - lastProcessedFocusSessionId
+- hangar records and currentBuildId
 
-On app startup run `recoverState()`.
+On app startup, before rendering the normal application content, run `recoverState()` once after persisted data has been successfully parsed and validated. Invalid or incomplete fields in a readable snapshot must be normalized to safe defaults rather than passed to screens. Await startup recovery writes before entering the normal UI.
 
 If a persisted running timer has `endAt > Date.now()`, continue it.
 
@@ -204,29 +229,51 @@ If a persisted running focus timer has expired while the app was closed:
 1. Treat it as completed.
 2. Run the same idempotent completion path.
 3. Advance the mecha at most once.
-4. Enter ASSEMBLY.
+4. Enter PART_REWARD.
 
-Corrupt persisted state must not cause a white screen. Fall back to safe defaults.
+If a persisted running break timer has expired, complete the break and enter READY. A paused timer keeps its paused remaining time. A running focus timer without a valid `sessionId` is invalid and must be reset to safe defaults; it must not advance progress. Break timers do not require a `sessionId`.
+
+Recovery order is:
+
+```text
+read persisted state
+  -> validate and normalize fields
+  -> recoverState()
+  -> render the recovered phase
+```
+
+Corrupt persisted state must not cause a white screen. Normalize invalid fields in readable snapshots to safe defaults while preserving valid hangar records. If storage cannot be read, JSON cannot be parsed, or the snapshot version is newer than this app, show a startup error with Retry. Do not recover from defaults, overwrite or clear the stored snapshot after failed hydration. Failed startup recovery writes also show Retry; retrying must not collect a part twice.
+
+Persistence version 1 migrates the former six-stage workflow: preserve settings, focus totals and completed-session history; clamp collected parts to five. A legacy ASSEMBLY snapshot becomes PART_REWARD. A legacy running focus or break after all parts are collected returns to READY without adding progress. Preserve a legacy COMPLETE snapshot as completed. A new READY snapshot with all five parts must remain READY until the user clicks Assemble; a new ASSEMBLY snapshot may replay final assembly after restart.
+
+Persistence version 2 introduced the hangar. Preserve all version-1 timer/collection state and assign a stable build ID if a manual assembly was already running. Import a legacy COMPLETE snapshot into the hangar once; use `completedAt: null` when the old app did not store completion time. Preserve existing hangar entries when the active timer is corrupt. Unknown model IDs in archived records remain stored even if their assets are unavailable. Deduplicate archive records by build ID.
+
+Persistence version 3 introduced model-aware progress recovery. Resolve active progress using its saved `assembly.mechaId` and that model's manifest. Do not replace a recognized non-default model with MECHA-01. If a nonempty saved active model ID is not registered, show startup Retry and leave the original save unchanged. A missing model ID in legacy data defaults to MECHA-01.
+
+Current persistence version is 4. Retain the storage key and original eight data fields, adding `unlockedParts` and `workbench`. Migrate versions 0/1/2/3 and backfill permanent part unlocks from valid current collection progress and registered fixed-model hangar entries. Do not infer absent historical builds or grant parts from custom compositions. Preserve unknown valid part IDs and custom recipes when their assets are unavailable. Persist the editable draft identity/name/selected parts; retain legacy hangar metadata and save custom records with `kind: custom` plus a complete five-slot composition.
+
+Records made and discarded by Build Again before the hangar feature existed cannot be reconstructed from absent historical data; migration imports the currently persisted completed build only.
 
 ## 8. Mecha model
 
-MVP contains one built-in demo mecha:
+The approved multiple-model extension contains six original built-in demo mecha:
 
 ```text
-id: mecha-01
-totalStages: 6
+id: mecha-01 through mecha-06
+totalStages: 5
 ```
 
-Suggested stages:
+Collectible parts, in unlock order:
 
 1. TORSO
 2. HEAD
 3. LEFT ARM
 4. RIGHT ARM
 5. LEG UNIT
-6. FINAL ASSEMBLY
 
-Stage names must come from a manifest, not be hard-coded into screens.
+Part names, asset paths and total count must come from a manifest. The final assembled image is a separate `finalAsset`, not a sixth collectible stage.
+
+Optional manifest `description` supplies a short model-design label in the selector. The four additional designs are heavy assault (03), winged aerial (04), skeletal close-combat (05) and high-mobility interceptor (06). Backpack, wings and torso-mounted equipment remain part of the torso collectible; they do not introduce another focus stage. These four asset sets place pelvis in the leg unit and end torso above it. Mixed-model composition still requires a separate implementation and attachment metadata.
 
 Example:
 
@@ -234,14 +281,14 @@ Example:
 {
   "id": "mecha-01",
   "name": "MECHA-01",
-  "totalStages": 6,
+  "totalStages": 5,
+  "finalAsset": "stages/stage-06.png",
   "stages": [
-    { "stage": 1, "name": "TORSO" },
-    { "stage": 2, "name": "HEAD" },
-    { "stage": 3, "name": "LEFT ARM" },
-    { "stage": 4, "name": "RIGHT ARM" },
-    { "stage": 5, "name": "LEG UNIT" },
-    { "stage": 6, "name": "FINAL ASSEMBLY" }
+    { "stage": 1, "name": "TORSO", "asset": "parts/torso.png" },
+    { "stage": 2, "name": "HEAD", "asset": "parts/head.png" },
+    { "stage": 3, "name": "LEFT ARM", "asset": "parts/left-arm.png" },
+    { "stage": 4, "name": "RIGHT ARM", "asset": "parts/right-arm.png" },
+    { "stage": 5, "name": "LEG UNIT", "asset": "parts/leg-unit.png" }
   ]
 }
 ```
@@ -250,12 +297,13 @@ Example:
 
 ```text
 src/assets/mecha/mecha-01/
+  parts/
+    torso.png
+    head.png
+    left-arm.png
+    right-arm.png
+    leg-unit.png
   stages/
-    stage-01.png
-    stage-02.png
-    stage-03.png
-    stage-04.png
-    stage-05.png
     stage-06.png
   break/
     break-01.png
@@ -264,16 +312,18 @@ src/mecha/mecha-01/
   manifest.json
 ```
 
-Stage assets must be:
+Part assets must depict isolated detached modules with a transparent background and consistent canvas size. Show them in separate fixed collection slots on READY and PART_REWARD. FOCUS shows only the current session's target detached part at a larger size, selected at `currentStage + 1`. This preview does not mean the part has already been collected. Do not use half-assembled whole-mecha images as collectible parts. The full-mecha asset is displayed only during manual final assembly and COMPLETE.
+
+Runtime PNG assets must be:
 
 - PNG
 - Transparent background
 - Same canvas size
-- Same visual scale
-- Same visual center
-- Same bottom anchor
+- Consistent framing within each collection slot
+- Centered independent parts
+- A stable full-mecha canvas for the final reveal
 
-Target canvas: 1080 x 1440.
+Target canvas: 1080 x 1440 with a 3:4 aspect ratio. Keep one consistent canvas size within each model's sprite set; native generated 1086 x 1448 canvases are also accepted. All model sets use the same aspect ratio and contain framing without per-part offsets.
 
 Prefer:
 
@@ -284,28 +334,28 @@ object-position: center bottom;
 
 Do not fix inconsistent source images with per-stage magic offsets in React components. Normalize assets instead.
 
+The approved custom-assembly renderer may use data-driven source bounds and neck/shoulder/waist mounting points in an adapter-owned layout file. Keep the renderer generic and use the same layout data for draft and archived compositions. Existing source PNGs remain unchanged; viewport crops normalize legacy duplicate waist/neck regions. This is static 2D composition, without skeletal animation or 3D.
+
 ## 10. Assembly animation
 
-MVP animation uses static stage PNGs plus Framer Motion.
+MVP animation uses independent part PNGs plus Framer Motion, and one separate full-mecha image.
 
 Do not implement frame-by-frame animation or 3D.
 
-Target duration: roughly 3-6 seconds.
+Part reveal duration: approximately 2.8 seconds. Final assembly duration: roughly 3-6 seconds. Respect reduced-motion preferences.
 
 Suggested sequence:
 
-1. Focus reaches 00:00.
-2. Background dims.
-3. Show `ASSEMBLY SEQUENCE`.
-4. Render previous stage.
-5. Fade/scale next stage in.
-6. Brief shake / flash.
-7. Show part name + `ASSEMBLY COMPLETE`.
-8. Transition to BREAK or COMPLETE.
+1. Focus reaches 00:00; show `PART SECURED` and the new detached part in its own collection slot.
+2. Keep already collected parts static and visible in their own slots; animate only the new part.
+3. Reveal completion enters BREAK for the first four parts, or READY for the fifth.
+4. After the user clicks Assemble, show the collected parts and play a short final-build transition.
+5. Remove the part layer before revealing the full mecha; do not overlay mismatched whole-mecha images.
+6. Finish final assembly at COMPLETE without changing focus totals.
 
 Primary goal:
 
-> The user should clearly feel that a new part was installed.
+> The user should clearly see each newly collected part and choose when to assemble the full mecha.
 
 Animation failure must never corrupt timer or assembly progress.
 
@@ -315,12 +365,14 @@ Animation failure must never corrupt timer or assembly progress.
 
 Show:
 
-- MECHA-01
-- Current stage
-- Progress X / 6
+- Selected model name
+- Collection slots containing all acquired detached parts
+- Parts collected X / 5
 - Next part
-- Start Focus button
+- Start Focus button while parts remain; Assemble button once all five are collected
 - Settings entry
+- Hangar entry with the completed-build count
+- Model-selection entry; disable it once this build has collected a part and explain that selection unlocks after assembly
 
 ### FOCUS
 
@@ -328,7 +380,7 @@ Show:
 
 - Timer
 - FOCUSING label
-- Current mecha stage
+- One large, static preview of this session's target detached part, labeled FOCUS TARGET
 - Progress
 - Next part
 - Pause / Resume
@@ -336,9 +388,15 @@ Show:
 
 Focus mode should be visually quiet. Avoid distracting continuous animation.
 
+The first focus previews TORSO; subsequent sessions preview HEAD, LEFT ARM, RIGHT ARM, then LEG UNIT. Choose the target from the manifest at the collected count plus one; the fourth focus, with three parts collected, must preview RIGHT ARM. Keep the collected count unchanged until focus completes and retain the next-part label. The large preview uses a 300px canvas, reduced to 240px in short windows so timer controls remain visible. READY and PART_REWARD retain the separate collection slots.
+
+### PART_REWARD
+
+Show the new part reveal and retain existing parts in separate slots. Return to the next phase through `finishPartReveal`.
+
 ### ASSEMBLY
 
-Show the assembly transition only.
+Show the user-triggered final assembly transition only, using all five acquired parts and the separate full-mecha asset.
 
 ### BREAK
 
@@ -347,8 +405,9 @@ Show:
 - break-01.png
 - Break timer
 - NEXT part
+- End Break button, which immediately returns to READY and preserves parts and focus totals
 
-Break starts automatically after non-final assembly animation.
+Break starts automatically after the first four part reveals. The fifth part returns directly to the collection screen with Assemble enabled.
 
 ### COMPLETE
 
@@ -359,8 +418,17 @@ Show:
 - Completed focus count
 - Total focused minutes
 - BUILD AGAIN
+- Saved-to-hangar confirmation and hangar entry
 
-BUILD AGAIN resets mecha progress and completed session count, but preserves settings.
+BUILD AGAIN resets mecha progress, completed session count, `totalFocusedMinutes`, and currentBuildId, but preserves the selected model, settings and the hangar. COMPLETE also offers model selection to begin a new build of either registered model.
+
+`Total focused minutes` is the sum of the `durationMs` captured when each focus session started, converted to minutes. A canceled session is not counted. A recovered expired session is counted only when its `completeFocus` call passes the same idempotency check.
+
+### HANGAR view
+
+Show completed models newest first, with model name/ID, a locally resolved full-mecha image, completion time, completed focus sessions and focused minutes captured for that build. Each build is a separate record, including repeated builds of the same model. Show a clear empty state, Return control and Escape-to-return behavior. If a model is unregistered or its image is absent, show a resource-unavailable placeholder and retain the record. The view does not allow deletion, cloud sync, or model selection in this extension.
+
+Register future manifests under `src/mecha/<model-id>/manifest.json`; the loader discovers them and rejects duplicate IDs. Place their local part images under `parts/` and full-model images under `final/` (or the established `stages/stage-06.png` convention). `getFinalAsset(modelId)` resolves each archive model separately. The build workflow currently continues to use the built-in MECHA-01.
 
 ## 12. Settings
 
@@ -381,18 +449,20 @@ Initial window target:
 - Minimum approximately 420 x 640
 - Resizable
 
+Windows build prerequisites for development and release are Rust stable with the MSVC target, Visual C++ Build Tools, WebView2, and the Tauri bundle icon assets. The release target is the host Windows architecture unless a separate target is explicitly configured.
+
 Windows notification is desirable:
 
 Focus completion:
 ```text
 MECHA-01
-RIGHT ARM ASSEMBLY COMPLETE
+RIGHT ARM COLLECTED
 ```
 
 Break completion:
 ```text
 BREAK COMPLETE
-Ready for next assembly.
+Ready for the next focus session.
 ```
 
 Notification support is lower priority than the core loop.
@@ -427,12 +497,25 @@ interface AppState {
     completedFocusSessions: number;
   };
 
+  totalFocusedMinutes: number;
+
   settings: {
     focusMinutes: number;
     breakMinutes: number;
   };
 
   lastProcessedFocusSessionId: string | null;
+  currentBuildId: string | null;
+  hangar: BuiltMecha[];
+}
+
+interface BuiltMecha {
+  id: string; // Stable build ID, distinct from the model ID
+  mechaId: string;
+  mechaName: string;
+  completedAt: number | null;
+  completedFocusSessions: number;
+  totalFocusedMinutes: number;
 }
 ```
 
@@ -446,6 +529,9 @@ cancelTimer
 completeFocus
 startBreak
 completeBreak
+endBreak
+finishPartReveal
+startAssembly
 finishAssemblyAnimation
 resetMecha
 updateSettings
@@ -483,6 +569,28 @@ src/
 
   hooks/
     useTimerTick.ts
+    usePhaseTransitions.ts
+
+  domain/
+    types.ts
+    timer.ts
+    collection.ts
+    hangar.ts
+    settings.ts
+    catalog.ts
+
+  application/
+    ports.ts
+    useCases.ts
+    archiveBuild.ts
+    snapshot.ts
+    phaseTransitions.ts
+
+  adapters/
+    platform/
+    storage/
+    catalog/
+    assets/
 
   mecha/
     types.ts
@@ -513,10 +621,10 @@ AGENTS.md
 
 ## 16. Error handling
 
-- Asset failure: show `MECHA ASSET ERROR` and Retry; do not lose timer state.
-- Corrupt persisted data: recover to safe defaults rather than crash.
+- Asset failure: show `MECHA ASSET ERROR` and Retry; retry only reloads the failed local asset and does not alter timer, phase, assembly, or persisted progress.
+- Corrupt fields in readable persisted data: normalize to safe defaults and retain valid archive records. Unreadable/unparseable or newer-version snapshots: show startup Retry without overwriting or clearing data.
 - Clamp stage to `0..totalStages`.
-- Never allow Stage 7 / 6.
+- Never collect beyond 5 / 5; reject focus starts once all parts are acquired.
 - The app must remain usable offline.
 - No telemetry, remote API, CDN asset, or remote font dependency.
 
@@ -540,25 +648,61 @@ Remaining time freezes while paused.
 Timer resumes from saved remaining time.
 
 ### TC-04 Focus Complete
-A completed focus changes FOCUS -> ASSEMBLY and advances exactly one stage.
+A completed focus changes FOCUS -> PART_REWARD and collects exactly one detached part.
 
-### TC-05 Assembly Complete
-If not final stage, animation completion enters BREAK and starts break timer.
+### TC-05 Part Reveal Complete
+For parts 1-4, reveal completion enters BREAK and starts the break timer. The fifth reveal returns to READY and enables Assemble.
 
 ### TC-06 Break Complete
 BREAK -> READY. Do not auto-start focus.
 
 ### TC-07 Final Assembly
-Stage 5 focus completion -> Stage 6 -> ASSEMBLY -> COMPLETE. No break.
+Five focus completions collect all five parts. READY waits for the user's Assemble click, then ASSEMBLY -> COMPLETE. No sixth focus and no extra minutes/sessions are added.
 
 ### TC-08 Restart During Focus
 Restart app before endAt. Remaining time is reconstructed correctly.
 
 ### TC-09 Restart After Expiry
-Restart after focus endAt. Progress advances exactly once and enters ASSEMBLY.
+Restart after focus endAt. Progress advances exactly once and enters PART_REWARD.
 
 ### TC-10 Build Again
-From COMPLETE, BUILD AGAIN resets assembly/session progress but preserves settings.
+From COMPLETE, BUILD AGAIN resets assembly/session progress and focused-minute totals but preserves settings.
+
+It must also preserve all hangar records and clear the active build identity.
+
+### TC-11 End Break
+Click End Break before expiry: BREAK -> READY with idle focus timer; preserve collected parts, session history, totals and settings. Repeated clicks or a late break callback must be harmless.
+
+### TC-12 Await Manual Assembly
+Reload after collecting part five: show all five separate parts and Assemble; do not automatically assemble or start a timer. Clicking Assemble twice must not duplicate progress.
+
+### TC-13 Collection Display
+Already collected parts retain their own slots when the next part arrives. No whole-mecha ghost layers, occlusion or replay of previous part animations.
+
+### TC-14 Archive Completed Build
+Finish manual assembly: one hangar record is saved with this build's model ID, timestamp and focus totals. Duplicate completion callbacks and reloads do not add another record. An interrupted final animation must finish using the same build ID.
+
+### TC-15 Build Again Keeps Hangar
+Build Again -> READY with a fresh collection and the old archive preserved. A second completed build of the same model gets a separate ID; its statistics do not overwrite the first record.
+
+### TC-16 Legacy Hangar Migration
+A version-0/1 COMPLETE snapshot is imported once with unknown completion time shown honestly. Older active focus/break/manual assembly progress remains usable. Corrupt active timer data must not erase completed builds.
+
+### TC-17 Hangar View
+Open from READY and COMPLETE, inspect empty/populated states, return without changing phase, refresh and reopen to see persistent records. Keep unfamiliar model records visible even when a model asset cannot be resolved.
+
+### Required automated logic coverage
+
+Before Phase 9 is complete, automated tests must cover at least:
+
+- Timestamp-based remaining time calculation.
+- Pause freezing remaining time and resume rebuilding `endAt`.
+- Duplicate `completeFocus` calls advancing stage and totals only once.
+- Expired focus recovery advancing exactly once.
+- Stage clamping so progress never exceeds `totalStages`.
+- Canceling a session without increasing completed sessions or focused minutes.
+- Ending breaks early, guarding manual assembly, fifth-part return to READY, and version-0 state migration.
+- Archive idempotency, two builds of one model, preserved history after reset/restart, version-1 migration, and unknown/malformed archive records.
 
 ## 19. Development phases
 
@@ -567,6 +711,7 @@ From COMPLETE, BUILD AGAIN resets assembly/session progress but preserves settin
 - Install Zustand and Framer Motion
 - Base project structure
 - Dark app shell
+- Minimal Tauri window configuration
 - Confirm `tauri dev`
 
 ### Phase 1 — Timer engine
@@ -586,23 +731,24 @@ From COMPLETE, BUILD AGAIN resets assembly/session progress but preserves settin
 - Manifest
 - Loader
 - Assembly state
-- Stage image selection
+- Independent part asset selection and separate final asset
 - Progress and next-part UI
 
 ### Phase 4 — Asset preparation
-- Add and normalize 6 stage PNGs
+- Add and normalize five detached part PNGs and a full-mecha PNG
 - Add break scene
 - Verify consistent anchors
 
 ### Phase 5 — Assembly animation
-- AssemblyScreen
-- Previous/next stage layering
-- Fade/scale/shake/flash
-- Automatic BREAK / COMPLETE transition
+- PartRewardScreen with separate collection slots
+- AssemblyScreen for manual final assembly
+- New-part reveal and final-build transition without whole-image ghost layers
+- Automatic BREAK / READY after reveals, COMPLETE after manual assembly
 
 ### Phase 6 — Break and completion
 - BreakScreen
 - Break timer flow
+- End Break action
 - CompleteScreen
 - Build Again
 
@@ -612,18 +758,25 @@ From COMPLETE, BUILD AGAIN resets assembly/session progress but preserves settin
 - Lock during active timer
 
 ### Phase 8 — Tauri integration
-- Window configuration
+- Production Tauri integration and Windows bundle configuration
 - Optional notifications
 - App icon
 - Production build
 
 ### Phase 9 — QA
-- Run TC-01 through TC-10
+- Run TC-01 through TC-13
 - Test restart/recovery
 - Test sleep/wake behavior where practical
 - TypeScript check
 - Build
 - Tag v0.1.0 when complete
+
+### Approved extension — Local hangar
+- Atomically save finished builds with stable IDs and model metadata
+- Persist completed models independently of current-build progress
+- Migrate legacy completed models without fabricating completion dates
+- Add a hangar view in READY/COMPLETE and model-specific asset resolution
+- Verify TC-14 through TC-17 and the existing focus/assembly loop
 
 ## 20. v0.1 Definition of Done
 
@@ -635,13 +788,15 @@ All of the following must be true:
 - Pause / resume / cancel work.
 - Restart recovery works.
 - Focus completion is idempotent.
-- Every completed focus advances exactly one stage.
-- Assembly animation visibly communicates installation.
-- Non-final assembly enters break.
-- Break ends at READY.
-- Sixth focus produces COMPLETE.
+- Every completed focus collects exactly one detached part.
+- New-part reveals preserve existing collection slots without ghost layers.
+- The first four part reveals enter break; the fifth returns to READY.
+- Break expiry and End Break return to READY.
+- Five parts unlock manual assembly; only the user's click can begin the final build.
+- Manual assembly produces COMPLETE without increasing focus counts or minutes.
 - Build Again works.
 - State persists.
+- Finished builds persist in the hangar and survive Build Again.
 - App works offline.
 - TypeScript build passes.
 - Tauri production build passes.
@@ -655,10 +810,56 @@ Potential v0.2+ ideas only:
 - System tray
 - Always on top
 - Mini mode
-- Multiple mecha
+- More original mecha designs beyond the six built-in models
 - Theme packs/import
 - Better part-fly-in animation
 - Sound effects
-- Hangar / collection
+- External model importing
 - Focus history
 - Statistics
+
+## 22. Approved behavior-preserving modular refactor
+
+Preserve the current screens, five-part collection, manual assembly, hangar behavior, development fast mode, timings, store action names, local assets and persisted key/schema version 2. This refactor does not add SQLite, cloud sync, authentication, mixed-part inventory or additional buildable models.
+
+Domain/application code must remain independent of React, Zustand, Vite, browser APIs and concrete storage. Inject catalog, clock, ID and duration configuration through ports. Keep Zustand as the business-state holder and the existing `useAppStore` facade; use application use cases for cross-module coordination.
+
+Move snapshot normalization/migration out of the store. The storage contract permits synchronous or asynchronous implementations, and startup must await hydration before recovery and normal rendering. Continue reading and writing the existing `gundamdoro-app-state` JSON envelope without altering fields or migration behavior.
+
+The app-level coordinator schedules the existing part-reveal and final-assembly completion actions. Screens handle presentation; image reveal stays at 2200ms (400ms reduced motion), part reveal at 2800ms, and final completion at 4800ms (1400ms reduced motion).
+
+Regression acceptance includes the existing tests, pure use cases with injected non-default model/time/IDs, synchronous and asynchronous storage restoration, dependency-boundary checks, browser completion/restart flows and the frontend/desktop production builds. See `docs/architecture.md` for dependency and extension rules.
+
+## 23. Approved extension — Multiple buildable models
+
+The user prioritized multiple models before independent part inventory and mixed-model assembly. This extension supersedes the original single-model and version-2 restrictions while preserving the focus/reward/manual-assembly loop.
+
+- Discover selectable models from the injected catalog. Ship MECHA-01 through MECHA-06, each with five detached part PNGs and its own full-mecha PNG. Model selection and the hangar may preview full models. Models without their own break image share the existing factory break scene; a model-specific `break/break-01.png` takes precedence when provided.
+- Keep one active build. `selectMecha(mechaId)` may begin a fresh build only in READY with zero collected parts, or in COMPLETE after the finished build has been archived. Unknown IDs and switches during FOCUS (including paused), PART_REWARD, BREAK, ASSEMBLY or partially collected READY are ignored. Canceling the first focus without earning a part permits selection again.
+- The selector is a separate view, not a timer phase. Returning without choosing preserves state. Selecting another model resets current-build counters and identity while preserving settings and all archive records. BUILD AGAIN restarts the current model.
+- Resolve focus target, collection slots, progress, reward, final assembly, completion and recovery from the active model ID. Archive each completed model with its own ID/name/statistics; hangar images resolve from each saved entry, independent of the active model.
+- Verify every registered model's asset set, locked switching, pause/restart and expired-focus recovery on non-default models, old-save migration, manual assembly/reload, mixed-model hangar history, and model-preserving BUILD AGAIN. Run TypeScript, automated tests, browser checks and a Windows production build.
+
+Stackable component quantities, multiple unfinished focus builds, database and networking remain separate work. Permanent inventory and cross-model composition are covered by the following approved extension.
+
+## 24. Approved extension — Permanent part inventory and custom assembly
+
+First-version rules follow the previously proposed reusable-unlock design. Each valid focus completion also unlocks the model's corresponding part exactly once by a stable model/slot ID. Unlocks survive model switching, BUILD AGAIN, custom saves and restart. Repeated collection does not create stackable quantities.
+
+- Slots are torso, head, left-arm, right-arm and legs. Manifests declare slot metadata; catalog validation rejects unknown/duplicate slots. Existing stage-order defaults remain supported for older injected catalogs.
+- Open the inventory/workbench view from READY (including partial current collections) or COMPLETE. It does not change the timer phase. Inventory supports model filtering, locked/empty/unavailable states and optional locked-catalog browsing.
+- All selected parts and the name live in a persisted Zustand draft. Allow only unlocked, matching-slot registered parts. Random selection uses an injected random source and chooses from owned parts per slot. Incomplete or blank-name builds cannot be saved. Workshop actions during FOCUS, PART_REWARD, BREAK or ASSEMBLY are ignored.
+- Preview the actual five component PNG layers aligned by calibrated mounting points; do not substitute a whole-model image for mixed builds. Render the same recipe in the hangar. Keep the preview visible while browsing components in narrow/wide layouts. Resource errors show retry/unavailable feedback without modifying ownership, focus state or saved recipes.
+- Saving a complete custom build archives its name, five part IDs, completion time and stable draft ID. Repeated saves/reload do not duplicate that draft. Editing name or composition creates a new draft identity; older archived recipes are immutable. Saving consumes no components and awards no focus sessions/minutes. Custom records display part origins; fixed-model history and statistics remain unchanged.
+
+Acceptance covers one-time focus unlocks, canceled/stale completions, version-0/1/2/3 inventory migration, draft restart, locked/wrong-slot guards, random bounds, save idempotency, non-consumption, unchanged focus progress, unknown part preservation, real component previews and custom/fixed records together. Run TypeScript, relevant/full regressions, browser visual/flow checks and the Windows production build.
+
+## 25. Approved change — Wing Zero EW assets and paused custom assembly
+
+On 2026-10-09 the user paused further custom mixing and provided a generated Wing Zero EW fan-art package; on 2026-10-10 they explicitly requested including that package in Git. This exception permits that named generated fan-art model alongside the six original demo models. It does not authorize downloading official artwork or imply a character license. Retain its non-official/unlicensed provenance and distinguish it from original models.
+
+- Register stable ID `wing-zero-ew`, display name `飞翼零式 EW`; preserve every existing model ID and persistence version 4. Include all seven selected PNG files with source notes so a clone can run the same model.
+- Keep five focus rewards: torso plus separate wings as one reward group, corrected head, left arm, right arm, paired legs. No sixth session. Show torso and wings separately within that one group, without generating an assembled composite. Manual final assembly, completion and hangar use the provided full-body image; break uses the default factory scene.
+- Keep original PNG bytes. Optional adapter-owned `src/mecha/<id>/presentation.json` defines source viewports and companion images for readable part previews. Apply it consistently in focus, collection/reward, final-transition part tiles and inventory; models without metadata retain their previous rendering.
+- Hide custom assembly entrypoints via a presentation feature switch. Inventory remains available. Do not remove underlying store actions, drafts, ownership or archived custom recipes, and do not claim new fan-art components are calibrated for mixing.
+- Verify transparent consistent canvases including companion wings, corrected head choice, five-reward/one-archive behavior, restart and Build Again, unchanged original models, browser previews and production builds before committing.

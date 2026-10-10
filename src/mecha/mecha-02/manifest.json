@@ -1,0 +1,39 @@
+{
+  "id": "mecha-02",
+  "name": "MECHA-02",
+  "description": "轻装机动型",
+  "totalStages": 5,
+  "finalAsset": "final/assembled.png",
+  "stages": [
+    {
+      "stage": 1,
+      "name": "TORSO",
+      "asset": "parts/torso.png",
+      "slot": "torso"
+    },
+    {
+      "stage": 2,
+      "name": "HEAD",
+      "asset": "parts/head.png",
+      "slot": "head"
+    },
+    {
+      "stage": 3,
+      "name": "LEFT ARM",
+      "asset": "parts/left-arm.png",
+      "slot": "left-arm"
+    },
+    {
+      "stage": 4,
+      "name": "RIGHT ARM",
+      "asset": "parts/right-arm.png",
+      "slot": "right-arm"
+    },
+    {
+      "stage": 5,
+      "name": "LEG UNIT",
+      "asset": "parts/leg-unit.png",
+      "slot": "legs"
+    }
+  ]
+}

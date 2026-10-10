@@ -1,0 +1,154 @@
+/** 【UI·总调度】读 phase 决定渲染哪块屏；按钮只调 store actions，自己不改业务状态。 */
+import { useState } from 'react'
+import { AssemblyScreen } from '../components/Mecha/AssemblyScreen'
+import { BreakScreen } from '../components/Break/BreakScreen'
+import { CompleteScreen } from '../components/Complete/CompleteScreen'
+import { SettingsDialog } from '../components/Settings/SettingsDialog'
+import { useTimerTick } from '../hooks/useTimerTick'
+import { usePhaseTransitions } from '../hooks/usePhaseTransitions'
+import { formatTime } from '../lib/timer'
+import { AssemblyProgress } from '../components/Mecha/AssemblyProgress'
+import { MechaDisplay } from '../components/Mecha/MechaDisplay'
+import { FocusPartDisplay } from '../components/Mecha/FocusPartDisplay'
+import { PartRewardScreen } from '../components/Mecha/PartRewardScreen'
+import { HangarScreen } from '../components/Hangar/HangarScreen'
+import { getMechaManifest } from '../mecha/loader'
+import { useAppStore } from '../store/useAppStore'
+import { canSelectMecha } from '../domain/collection'
+import { ModelSelectionScreen } from '../components/Mecha/ModelSelectionScreen'
+import { InventoryScreen } from '../components/Inventory/InventoryScreen'
+import { CUSTOM_ASSEMBLY_ENABLED } from './features'
+
+export function App() {
+  useTimerTick()
+  usePhaseTransitions()
+
+  const phase = useAppStore((state) => state.phase)
+  const timer = useAppStore((state) => state.timer)
+  const currentStage = useAppStore((state) => state.assembly.currentStage)
+  const mechaId = useAppStore((state) => state.assembly.mechaId)
+  const canChangeModel = useAppStore(canSelectMecha)
+  const selectMecha = useAppStore((state) => state.selectMecha)
+  const settings = useAppStore((state) => state.settings)
+  const updateSettings = useAppStore((state) => state.updateSettings)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [hangarOpen, setHangarOpen] = useState(false)
+  const [modelsOpen, setModelsOpen] = useState(false)
+  const [partsOpen, setPartsOpen] = useState(false)
+  const ownedCount = useAppStore((state) => state.unlockedParts.length)
+  const prepareWorkbench = useAppStore((state) => state.prepareWorkbench)
+  const openParts = () => { if (CUSTOM_ASSEMBLY_ENABLED) prepareWorkbench(); setPartsOpen(true) }
+  const hangarCount = useAppStore((state) => state.hangar.length)
+  const startFocus = useAppStore((state) => state.startFocus)
+  const pauseTimer = useAppStore((state) => state.pauseTimer)
+  const resumeTimer = useAppStore((state) => state.resumeTimer)
+  const cancelTimer = useAppStore((state) => state.cancelTimer)
+  const startAssembly = useAppStore((state) => state.startAssembly)
+  const manifest = getMechaManifest(mechaId)
+  const allPartsCollected = currentStage === manifest.totalStages
+  const isActive = phase === 'FOCUS'
+  const isPaused = timer.status === 'paused'
+  const phaseLabel = phase === 'FOCUS' ? 'FOCUSING' : phase === 'READY' ? 'SYSTEM READY' : phase
+
+  if (partsOpen && (phase === 'READY' || phase === 'COMPLETE')) {
+    return <InventoryScreen onClose={() => setPartsOpen(false)} onOpenHangar={() => { setPartsOpen(false); setHangarOpen(true) }} />
+  }
+
+  if (hangarOpen && (phase === 'READY' || phase === 'COMPLETE')) {
+    return <HangarScreen onClose={() => setHangarOpen(false)} />
+  }
+
+  if (modelsOpen && canChangeModel) {
+    return <ModelSelectionScreen
+      currentMechaId={mechaId}
+      completed={phase === 'COMPLETE'}
+      onClose={() => setModelsOpen(false)}
+      onSelect={(id) => {
+        selectMecha(id)
+        setModelsOpen(false)
+      }}
+    />
+  }
+
+  if (phase === 'PART_REWARD') {
+    return <PartRewardScreen />
+  }
+
+  if (phase === 'ASSEMBLY') {
+    return <AssemblyScreen />
+  }
+
+  if (phase === 'BREAK') {
+    return <BreakScreen />
+  }
+
+  if (phase === 'COMPLETE') {
+    return (
+      <>
+        <CompleteScreen onOpenSettings={() => setSettingsOpen(true)} onOpenHangar={() => setHangarOpen(true)} onOpenModels={() => setModelsOpen(true)} onOpenParts={openParts} />
+        <SettingsDialog
+          open={settingsOpen}
+          focusMinutes={settings.focusMinutes}
+          breakMinutes={settings.breakMinutes}
+          onSave={(focusMinutes, breakMinutes) => {
+            updateSettings({ focusMinutes, breakMinutes })
+            setSettingsOpen(false)
+          }}
+          onClose={() => setSettingsOpen(false)}
+        />
+      </>
+    )
+  }
+
+  return (
+    <main className="app-shell">
+      <p className="eyebrow">GUNDAMDORO / MVP 0.1</p>
+      <section className={`hero-card${isActive ? ' focus-card' : ''}`} aria-labelledby="app-title">
+        <div className={`status-dot${isActive ? ' is-active' : ''}`} aria-hidden="true" />
+        <h1 id="app-title">{manifest.name}</h1>
+        <p className="phase-label">{phaseLabel}</p>
+        {isActive ? <FocusPartDisplay mechaId={mechaId} currentStage={currentStage} /> : <MechaDisplay mechaId={mechaId} currentStage={currentStage} />}
+        <AssemblyProgress mechaId={mechaId} currentStage={currentStage} />
+        {!allPartsCollected && <div className="timer-panel" aria-live="polite">
+          <span className="timer-label">{isActive ? 'FOCUS TIMER' : 'SESSION TIMER'}</span>
+          <strong className="timer-value">{formatTime(timer.remainingMs)}</strong>
+        </div>}
+        {phase === 'READY' && (allPartsCollected
+          ? <button type="button" onClick={startAssembly}>开始拼装</button>
+          : <button type="button" onClick={() => startFocus()}>START FOCUS</button>)}
+        {isActive && (
+          <div className="timer-controls">
+            <button type="button" onClick={() => (isPaused ? resumeTimer() : pauseTimer())}>
+              {isPaused ? 'RESUME' : 'PAUSE'}
+            </button>
+            <button type="button" className="secondary-button" onClick={cancelTimer}>
+              CANCEL
+            </button>
+          </div>
+        )}
+        <p className="bootstrap-note">
+          {isPaused ? 'Timer paused' : allPartsCollected ? 'All parts collected. Assemble whenever you are ready.' : 'Complete a focus session to collect the next part.'}
+        </p>
+        {phase === 'READY' && (
+          <div className="ready-navigation">
+            <button type="button" className="secondary-button" disabled={!canChangeModel} aria-describedby={!canChangeModel ? 'model-lock-note' : undefined} onClick={() => setModelsOpen(true)}>选择机型</button>
+            <button type="button" className="secondary-button" onClick={() => setSettingsOpen(true)}>SETTINGS</button>
+            <button type="button" className="secondary-button" onClick={() => setHangarOpen(true)}>仓库（{hangarCount}）</button>
+          </div>
+        )}
+        {phase === 'READY' && !canChangeModel && <p id="model-lock-note" className="bootstrap-note">完成本轮拼装后可更换机型</p>}
+        {phase === 'READY' && <button type="button" className="secondary-button workshop-entry" onClick={openParts}>{CUSTOM_ASSEMBLY_ENABLED ? '配件仓库与拼装' : '配件仓库'}（{ownedCount}）</button>}
+      </section>
+      <SettingsDialog
+        open={settingsOpen}
+        focusMinutes={settings.focusMinutes}
+        breakMinutes={settings.breakMinutes}
+        onSave={(focusMinutes, breakMinutes) => {
+          updateSettings({ focusMinutes, breakMinutes })
+          setSettingsOpen(false)
+        }}
+        onClose={() => setSettingsOpen(false)}
+      />
+    </main>
+  )
+}

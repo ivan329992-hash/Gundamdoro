@@ -8,7 +8,7 @@ Build the v0.1 Windows desktop MVP of Gundamdoro exactly as specified.
 
 The product goal is not to build a feature-complete productivity app. The goal is to validate:
 
-> Completing focus sessions gradually assembles a mecha and makes the next session feel rewarding.
+> Completing focus sessions collects visible mecha parts and makes the next session feel rewarding; the user chooses when to perform the final assembly.
 
 ## Source of truth
 
@@ -65,7 +65,7 @@ Do not add large dependencies without a clear need.
 - Timer source of truth is timestamp-based.
 - Do not rely on decrement-only intervals.
 - Focus completion must be idempotent using sessionId.
-- One focus session may advance the mecha only once.
+- One focus session may collect one part only once; manual assembly must not add sessions or focused minutes.
 - Animation errors must not corrupt progress.
 
 ## Quality rules
@@ -80,12 +80,15 @@ At the end of each phase:
 
 Keep implementations small and readable. Prefer straightforward code over architecture for architecture's sake.
 
+Follow the module boundaries in [docs/architecture.md](./docs/architecture.md). Domain and application code must not import UI, Zustand, adapters, Vite or browser APIs; inject runtime/catalog capabilities through ports. Keep the existing store facade and persistence compatibility when extending functionality.
+
 ## Asset rules
 
 - All runtime assets are local.
 - Stage images must use consistent canvas/anchor rules from SPEC.
 - Do not add copyrighted official Gundam/Bandai/Sunrise assets to the public repository.
 - Use original demo mecha assets.
+- SPEC section 25 explicitly permits the user-supplied generated Wing Zero EW fan-art set alongside the original demo models. Preserve its unofficial/unlicensed provenance; do not substitute official images.
 
 ## UI rule
 

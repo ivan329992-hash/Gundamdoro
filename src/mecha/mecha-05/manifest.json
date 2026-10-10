@@ -1,0 +1,39 @@
+{
+  "id": "mecha-05",
+  "name": "MECHA-05",
+  "description": "骨架近战型",
+  "totalStages": 5,
+  "finalAsset": "final/assembled.png",
+  "stages": [
+    {
+      "stage": 1,
+      "name": "TORSO",
+      "asset": "parts/torso-v2.png",
+      "slot": "torso"
+    },
+    {
+      "stage": 2,
+      "name": "HEAD",
+      "asset": "parts/head.png",
+      "slot": "head"
+    },
+    {
+      "stage": 3,
+      "name": "LEFT ARM",
+      "asset": "parts/left-arm.png",
+      "slot": "left-arm"
+    },
+    {
+      "stage": 4,
+      "name": "RIGHT ARM",
+      "asset": "parts/right-arm.png",
+      "slot": "right-arm"
+    },
+    {
+      "stage": 5,
+      "name": "LEG UNIT",
+      "asset": "parts/leg-unit.png",
+      "slot": "legs"
+    }
+  ]
+}
