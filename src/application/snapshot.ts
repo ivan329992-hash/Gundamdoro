@@ -1,14 +1,14 @@
-/** 【应用·存档】快照校验与 v0-v3→v4 迁移；库存和拼装配方独立持久化。 */
+/** 【应用·存档】快照校验与旧版→v5 迁移；库存和拼装配方独立持久化。 */
 import { DEFAULT_SETTINGS } from '../domain/settings'
 import { createInitialTimer, getDurationMs, type TimerState } from '../domain/timer'
 import type { AppData, AppPhase, BuiltMecha, Composition, DraftComposition, WorkbenchDraft } from '../domain/types'
 import { clampInteger, clampNumber, isAppPhase, isFiniteNumber, isRecord, isTimerStatus } from '../domain/validation'
 import type { AppDependencies } from './ports'
 import { archiveCompletedBuild } from './archiveBuild'
-import { createWorkbench, getPartDefinitions, getPartIdSlot, PART_SLOTS } from '../domain/inventory'
+import { createWorkbench, getPartDefinitions, getPartIdKey, getPartIdSlot, PART_SLOTS } from '../domain/inventory'
 
 export const APP_STORAGE_KEY = 'gundamdoro-app-state'
-export const APP_STORAGE_VERSION = 4
+export const APP_STORAGE_VERSION = 5
 
 export function createSnapshotCodec(dependencies: AppDependencies) {
   const durationMs = (minutes: number) => getDurationMs(minutes, dependencies.runtime.millisecondsPerMinute())
@@ -26,7 +26,7 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
 
   function normalizeInventory(value: unknown): string[] {
     if (!Array.isArray(value)) return []
-    return [...new Set(value.filter((id): id is string => getPartIdSlot(id) !== null))]
+    return [...new Set(value.filter((id): id is string => getPartIdKey(id) !== null))]
   }
 
   function normalizeWorkbench(value: unknown): WorkbenchDraft {
@@ -120,7 +120,7 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
     }
   }
 
-  function normalizeData(value: unknown, migrateInventory = false): AppData {
+  function normalizeData(value: unknown, migrateInventory = false, migratePartCount = false): AppData {
     const source = isRecord(value) ? value : {}
     const rawSettings = isRecord(source.settings) ? source.settings : {}
     const settings = {
@@ -139,6 +139,12 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
       currentStage: clampInteger(rawAssembly.currentStage, 0, 0, totalStages),
       totalStages,
       completedFocusSessions: clampInteger(rawAssembly.completedFocusSessions, 0, 0, Number.MAX_SAFE_INTEGER),
+    }
+    const formerTotal = rawAssembly.totalStages
+    if (migratePartCount && typeof formerTotal === 'number' && Number.isInteger(formerTotal)
+      && formerTotal > 0 && formerTotal < totalStages && assembly.currentStage >= formerTotal) {
+      if (phase === 'ASSEMBLY' || phase === 'COMPLETE') assembly.currentStage = totalStages
+      else if (phase === 'FOCUS' || phase === 'BREAK') phase = 'READY'
     }
     if ((phase === 'ASSEMBLY' || phase === 'COMPLETE') && assembly.currentStage < totalStages) {
       phase = 'READY'
@@ -201,7 +207,7 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
   function migrateLegacyData(value: unknown, version: number): AppData {
     if (version > APP_STORAGE_VERSION) throw new Error('The saved state requires a newer app version')
     const source = isRecord(value) ? value : {}
-    return normalizeData({ ...source, phase: version === 0 && source.phase === 'ASSEMBLY' ? 'PART_REWARD' : source.phase }, version < 4)
+    return normalizeData({ ...source, phase: version === 0 && source.phase === 'ASSEMBLY' ? 'PART_REWARD' : source.phase }, version < 5, version < 5)
   }
 
   function encode(state: AppData): AppData {

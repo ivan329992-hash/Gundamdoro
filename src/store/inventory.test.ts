@@ -37,7 +37,7 @@ describe('permanent component inventory and custom builds', () => {
     expect(store.getState().unlockedParts).toHaveLength(1)
   })
 
-  it.each([0, 1, 2, 3])('backfills earned active parts and completed models during version-%i migration', async (version) => {
+  it.each([0, 1, 2, 3, 4])('backfills earned active parts and completed models during version-%i migration', async (version) => {
     const fake = inventoryApp()
     const old = createDefaultData(fake.dependencies)
     old.assembly.currentStage = 2
@@ -51,7 +51,7 @@ describe('permanent component inventory and custom builds', () => {
     const restored = createAppStore(fake.dependencies)
     await initializeAppStore(restored)
     expect(restored.getState().unlockedParts).toEqual(store.getState().unlockedParts)
-    expect(JSON.parse(fake.values.get(APP_STORAGE_KEY)!).version).toBe(4)
+    expect(JSON.parse(fake.values.get(APP_STORAGE_KEY)!).version).toBe(5)
   })
 
   it('rejects locked components, wrong slots, partial recipes and blank names', () => {

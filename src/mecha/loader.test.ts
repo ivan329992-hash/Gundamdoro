@@ -41,11 +41,10 @@ describe('collectible mecha assets', () => {
       ...model.stages.map((part) => getStageAsset(part.stage, model.id)),
     ])
     expect(images.every(Boolean)).toBe(true)
-    expect(new Set(images).size).toBe(models.length * 6)
+    expect(new Set(images).size).toBe(models.reduce((count, model) => count + model.stages.length + 1, 0))
     for (const model of models) {
-      expect(model.totalStages).toBe(5)
-      expect(getNextStageDefinition(4, model.id)?.name).toBe('LEG UNIT')
-      expect(getNextStageDefinition(5, model.id)).toBeNull()
+      expect(model.totalStages).toBe(model.stages.length)
+      expect(getNextStageDefinition(model.totalStages, model.id)).toBeNull()
       expect(getBreakAsset(model.id)).toBe(getBreakAsset('mecha-01'))
     }
     expect(getNextStageDefinition(4, 'mecha-02')?.name).toBe('LEG UNIT')
@@ -54,12 +53,15 @@ describe('collectible mecha assets', () => {
     expect(getStageAsset(1, 'unregistered-model')).toBeNull()
   })
 
-  it('uses the corrected fan-art head and retains five focus rewards', () => {
+  it('uses the cleaned fan-art head and collects wings as a sixth independent part', () => {
     const model = getMechaManifest('wing-zero-ew')
     expect(model.name).toBe('飞翼零式 EW')
-    expect(model.stages[0].name).toBe('TORSO + WINGS')
-    expect(getStageAsset(2, model.id)).toContain('head-corrected.png')
-    expect(getFinalAsset(model.id)).toContain('assembled.png')
-    expect(getNextStageDefinition(5, model.id)).toBeNull()
+    expect(model.stages[0].name).toBe('TORSO')
+    expect(model.totalStages).toBe(6)
+    expect(getStageAsset(2, model.id)).toContain('head-clean-v3.png')
+    expect(getFinalAsset(model.id)).toContain('assembled-decals-v2.png')
+    expect(getNextStageDefinition(5, model.id)?.name).toBe('WINGS')
+    expect(getStageAsset(6, model.id)).toContain('wings.png')
+    expect(getNextStageDefinition(6, model.id)).toBeNull()
   })
 })

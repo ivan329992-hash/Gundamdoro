@@ -12,19 +12,28 @@ describe('stage image presentation', () => {
     expect(html).not.toContain('<svg')
   })
 
-  it('shows detached torso and wings together, not a whole-model substitute', () => {
+  it('shows the torso alone during its own focus', () => {
     const html = renderToStaticMarkup(<StageImage mechaId="wing-zero-ew" stage={1} className="focus-part-image" />)
     expect(html).toContain('torso.png')
-    expect(html).toContain('wings.png')
-    expect(html.match(/<image /g)).toHaveLength(2)
+    expect(html).not.toContain('wings.png')
+    expect(html.match(/<image /g)).toHaveLength(1)
     expect(html).not.toContain('/final/')
+  })
+
+  it('shows only wings during the independent sixth focus', () => {
+    const html = renderToStaticMarkup(<StageImage mechaId="wing-zero-ew" stage={6} className="focus-part-image" />)
+    expect(html).toContain('wings.png')
+    expect(html).not.toContain('torso.png')
+    expect(html.match(/<image /g)).toHaveLength(1)
   })
 
   it('enlarges the corrected head with a bounded source viewport', () => {
     const html = renderToStaticMarkup(<StageImage mechaId="wing-zero-ew" stage={2} />)
-    expect(html).toContain('head-corrected.png')
-    expect(html).toContain('viewBox="410 160 270 230"')
-    expect(html).toContain('aria-label="修正版头部"')
+    expect(html).toContain('head-clean-v3.png')
+    expect(html).not.toContain('head-blue-v2.png')
+    expect(html).not.toContain('head-corrected.png')
+    expect(html).toContain('viewBox="20 275 1046 840"')
+    expect(html).toContain('aria-label="飞翼零式清理版头部"')
     expect(getStagePresentation('missing-model', 1)).toBeNull()
   })
 

@@ -98,6 +98,12 @@ export function createAppUseCases(dependencies: AppDependencies) {
     return beginBuild(state, mecha)
   }
 
+  function abandonBuild(state: AppData): AppData {
+    if (state.phase === 'ASSEMBLY' || state.phase === 'COMPLETE') return state
+    const mecha = catalog.find(state.assembly.mechaId)
+    return mecha ? beginBuild(state, mecha) : state
+  }
+
   function resetMecha(state: AppData): AppData {
     if (state.phase !== 'COMPLETE') return state
     const mecha = catalog.find(state.assembly.mechaId)
@@ -121,7 +127,7 @@ export function createAppUseCases(dependencies: AppDependencies) {
 
   return {
     selectMecha, startFocus, completeFocus, pauseTimer, resumeTimer,
-    cancelTimer, finishPartReveal, startBreak, completeBreak, endBreak, startAssembly,
+    cancelTimer, abandonBuild, finishPartReveal, startBreak, completeBreak, endBreak, startAssembly,
     finishAssemblyAnimation, resetMecha, updateSettings, syncTimer, recoverState: syncTimer,
   }
 }

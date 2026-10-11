@@ -317,7 +317,7 @@ describe('useAppStore', () => {
     expect(useAppStore.getState().totalFocusedMinutes).toBe(75)
     useAppStore.getState().finishPartReveal(1_000)
     expect(useAppStore.getState().phase).toBe('BREAK')
-    expect(JSON.parse(memoryStorage.getItem('gundamdoro-app-state')!).version).toBe(4)
+    expect(JSON.parse(memoryStorage.getItem('gundamdoro-app-state')!).version).toBe(5)
   })
 
   it('migrates legacy completion while keeping actual six-session history', async () => {

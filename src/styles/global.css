@@ -194,6 +194,12 @@ button:disabled { cursor: not-allowed; opacity: .7; }
 .inventory-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; list-style: none; padding: 0; margin: 0; }
 .inventory-card { min-width: 0; padding: 10px; border: 1px solid #344756; border-radius: 12px; background: #111820; }
 .inventory-card.is-selected { border-color: #57d6a0; background: #152b26; }
+.focus-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.focus-controls button { font-size: 13px; padding-left: 4px; padding-right: 4px; }
+.abandon-dialog { box-sizing: border-box; width: min(360px, calc(100% - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 24px; border: 1px solid #344854; border-radius: 16px; background: #14202a; color: #e5edf3; }
+.abandon-dialog::backdrop { background: rgb(0 0 0 / 70%); }
+.abandon-dialog p { color: #b3c3d0; line-height: 1.6; }
+.abandon-dialog button { width: 100%; margin-top: 12px; }
 .inventory-card.is-locked { border-style: dashed; }
 .inventory-part-preview { height: 130px; display: grid; place-items: center; overflow: hidden; color: #647987; font-size: 12px; }
 .inventory-card strong { display: block; margin-top: 10px; font-size: 13px; }

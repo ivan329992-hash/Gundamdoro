@@ -31,7 +31,7 @@ export function ModelSelectionScreen({ currentMechaId, completed, onSelect, onCl
           </div>
           <button ref={backButton} type="button" className="secondary-button model-back" onClick={onClose}>返回</button>
         </header>
-        <p className="model-note">选择下一台要制作的机体。开始收集部件后，本轮机型将锁定至拼装完成。</p>
+        <p className="model-note">选择下一台要制作的机体。已有收集进度时，更换机型需先确认放弃本轮制作；永久库存会保留。</p>
         <ul className="model-grid" aria-label="可制作机型">
           {models.map((model) => {
             const selected = model.id === currentMechaId

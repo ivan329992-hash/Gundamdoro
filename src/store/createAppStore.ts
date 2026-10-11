@@ -20,6 +20,7 @@ export function createAppStore(dependencies: AppDependencies) {
       pauseTimer: (now) => set((state) => useCases.pauseTimer(state, now)),
       resumeTimer: (now) => set((state) => useCases.resumeTimer(state, now)),
       cancelTimer: () => set((state) => useCases.cancelTimer(state)),
+      abandonBuild: () => set((state) => useCases.abandonBuild(state)),
       completeFocus: (id, now) => set((state) => useCases.completeFocus(state, id, now)),
       startBreak: (now) => set((state) => useCases.startBreak(state, now)),
       completeBreak: (now) => set((state) => useCases.completeBreak(state, now)),

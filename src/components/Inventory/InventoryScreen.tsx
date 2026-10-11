@@ -81,10 +81,10 @@ export function InventoryScreen({ onClose, onOpenHangar }: InventoryScreenProps)
           <ul className="inventory-grid" aria-label={tab === 'assembly' ? `${PART_SLOT_LABELS[slot]}配件` : '配件列表'}>
             {options.map((part) => {
               const unlocked = owned.includes(part.id)
-              const selected = draft.parts[part.slot] === part.id
+              const selected = part.slot ? draft.parts[part.slot] === part.id : false
               return <li key={part.id} className={`inventory-card${selected && tab === 'assembly' ? ' is-selected' : ''}${unlocked ? '' : ' is-locked'}`}>
                 <div className="inventory-part-preview">{unlocked ? <StageImage mechaId={part.mechaId} stage={part.stage} className="part-image" /> : <span>未解锁</span>}</div>
-                <strong>{PART_SLOT_LABELS[part.slot]}</strong><p>{part.mechaName}</p>
+                <strong>{part.slot ? PART_SLOT_LABELS[part.slot] : part.name}</strong><p>{part.mechaName}</p>
                 {unlocked ? tab === 'assembly' ? <button type="button" className={selected ? 'secondary-button' : ''} disabled={selected || !canEdit} onClick={() => selectPart(slot, part.id)}>{selected ? '已选用' : '选用此配件'}</button> : <span className="part-owned">已解锁 · 可重复使用</span> : <span className="part-locked">完成该机型第 {part.stage} 次专注</span>}
               </li>
             })}

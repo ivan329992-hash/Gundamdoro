@@ -4,7 +4,7 @@ import { getBreakAsset, getMechaManifest, getNextStageDefinition } from '../../m
 import { formatTime } from '../../lib/timer'
 import { useAppStore } from '../../store/useAppStore'
 
-export function BreakScreen() {
+export function BreakScreen({ onAbandonBuild }: { onAbandonBuild?: () => void }) {
   const timer = useAppStore((state) => state.timer)
   const currentStage = useAppStore((state) => state.assembly.currentStage)
   const endBreak = useAppStore((state) => state.endBreak)
@@ -39,6 +39,7 @@ export function BreakScreen() {
         <strong className="break-timer" aria-live="polite">{formatTime(timer.remainingMs)}</strong>
         <p className="bootstrap-note">Take a short recovery break.</p>
         <button type="button" className="secondary-button" onClick={endBreak}>结束休息</button>
+        {onAbandonBuild && <button type="button" className="secondary-button" onClick={onAbandonBuild}>放弃制作并换机型</button>}
       </section>
     </main>
   )

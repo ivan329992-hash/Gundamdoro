@@ -1,6 +1,6 @@
 # Module boundaries
 
-The modular refactor retains the store facade and isolates platform capabilities. The current extensions add model selection, permanent component inventory and custom assembly. The `gundamdoro-app-state` key remains unchanged; version 4 adds `unlockedParts` and `workbench` to the original eight fields.
+The modular refactor retains the store facade and isolates platform capabilities. The `gundamdoro-app-state` key remains unchanged; version 4 added inventory/draft fields, and current version 5 retains all ten fields while generalizing component IDs and model-specific counts. Custom mixing entrypoints remain paused.
 
 ## Dependency direction
 
@@ -26,7 +26,7 @@ Application phase policy keeps part reveal at 2800ms, normal assembly completion
 
 ## Persistence contract
 
-Storage offers `getItem`, `setItem`, and `removeItem`, accepting synchronous implementations or Promise-returning implementations. Startup explicitly awaits hydration before recovery and rendering. Version 4 migrates versions 0/1/2/3, backfilling part unlocks from current collection and known fixed archives. The saved active model is resolved from the catalog. An unknown active model fails hydration without overwriting the save; unknown archived models/part IDs remain stored. No database is introduced.
+Storage offers `getItem`, `setItem`, and `removeItem`, accepting synchronous implementations or Promise-returning implementations. Startup awaits hydration before recovery. Version 5 migrates versions 0 through 4, backfilling ownership from collected progress and fixed archives. Model-count expansion preserves legacy completed/in-assembly status and build identity without inventing focus statistics; partial collections retain their prefix. An unknown active model fails hydration without overwriting the save; unknown valid model/component references remain stored. No database is introduced.
 
 Storage acquisition is deferred to each operation so a temporary access failure can be retried. Initialization checks successful hydration before calling recovery and awaits its write. The bootstrap renders loading/error UI outside the normal app; failed reads, JSON parsing and unsupported newer versions cannot trigger a default-state overwrite. Retry rehydrates failed reads, or retries recovery after a failed startup write without replaying an already completed session. Readable snapshots still use existing field normalization and legacy migration.
 
@@ -40,6 +40,6 @@ The default model remains MECHA-01; MECHA-01 through MECHA-06 are selectable. Op
 
 `adapters/assets/assembly-layouts.json` owns alpha bounds, source viewport crops and mounting points. `CompositeMecha` generically places actual part PNGs with static SVG layers and is shared by workbench and custom hangar cards. React holds transient filters/tabs/resource failures only; draft/name/ownership/recipes remain in Zustand. Custom saves do not change the active fixed-model focus build. Mobile/mini-program UI and networking remain separate work.
 
-Custom mixing entrypoints are currently paused through `app/features.ts`; its persisted data and old hangar rendering remain compatible. A seventh catalog entry, `wing-zero-ew`, uses user-provided unofficial fan art and the unchanged five-session state machine. `adapters/assets/stagePresentation.ts` discovers optional presentation metadata independently of domain rules. `StageImage` renders source-bounded standalone images and companion assets consistently in focus, collection, final-transition tiles and inventory; absent metadata uses the original image component. Wings are a companion to the torso reward, not a new slot, session or mixed-model layout. Runtime sprites and manifests are bundled locally, including the fan-art set at the user's explicit request with provenance retained.
+Custom mixing remains paused through `app/features.ts`; persisted drafts/recipes and old hangar rendering remain compatible. The catalog derives `totalStages` from each collectible list, independently of custom-mixing slots. Inventory defines every component with a stable key (`partId`, existing slot key, or legacy stage fallback); an extra component need not have a mixing slot. Wing Zero EW has six stages, with independent wings appended after its original five-part prefix. `stagePresentation.ts` discovers optional source viewports independently of domain rules; `StageImage` shares these across focus, collection, transition tiles and inventory. Runtime assets remain bundled locally with provenance retained.
 
 `npm test` runs dependency-boundary tests using the TypeScript parser, pure use-case tests, storage hydration/envelope contracts, phase timing tests, and existing regressions. Keep tests updated if a dependency boundary deliberately changes.

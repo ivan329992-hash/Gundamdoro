@@ -18,7 +18,7 @@ export interface PartDefinition {
   mechaId: string
   mechaName: string
   stage: number
-  slot: PartSlot
+  slot?: PartSlot
   name: string
   asset: string
 }
@@ -28,6 +28,7 @@ export interface MechaStage {
   name: string
   asset: string
   slot?: PartSlot
+  partId?: string
 }
 
 export interface MechaManifest {
@@ -81,6 +82,7 @@ export interface AppActions {
   pauseTimer: (now?: number) => void
   resumeTimer: (now?: number) => void
   cancelTimer: () => void
+  abandonBuild: () => void
   completeFocus: (sessionId: string, now?: number) => void
   startBreak: (now?: number) => void
   completeBreak: (now?: number) => void

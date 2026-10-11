@@ -1,5 +1,5 @@
 import type { MechaCatalog } from './catalog'
-import type { AppPhase, Composition, DraftComposition, PartDefinition, PartSlot, WorkbenchDraft } from './types'
+import type { AppPhase, Composition, DraftComposition, MechaStage, PartDefinition, PartSlot, WorkbenchDraft } from './types'
 
 export const PART_SLOTS: readonly PartSlot[] = ['torso', 'head', 'left-arm', 'right-arm', 'legs']
 export const PART_SLOT_LABELS: Record<PartSlot, string> = {
@@ -10,24 +10,42 @@ export function isPartSlot(value: unknown): value is PartSlot {
   return typeof value === 'string' && PART_SLOTS.includes(value as PartSlot)
 }
 
-export function getPartId(mechaId: string, slot: PartSlot): string {
-  return `${mechaId}:${slot}`
+export function isPartKey(value: unknown): value is string {
+  return typeof value === 'string' && /^[a-z][a-z0-9-]{0,79}$/.test(value)
 }
 
-export function getPartIdSlot(value: unknown): PartSlot | null {
+export function getStagePartKey(part: MechaStage): string {
+  return part.partId ?? part.slot ?? PART_SLOTS[part.stage - 1] ?? `part-${part.stage}`
+}
+
+export function getStagePartSlot(part: MechaStage): PartSlot | undefined {
+  if (part.slot) return part.slot
+  if (part.partId) return isPartSlot(part.partId) ? part.partId : undefined
+  return PART_SLOTS[part.stage - 1]
+}
+
+export function getPartId(mechaId: string, key: string): string {
+  return `${mechaId}:${key}`
+}
+
+export function getPartIdKey(value: unknown): string | null {
   if (typeof value !== 'string' || value.length > 300) return null
   const separator = value.lastIndexOf(':')
   if (separator < 1 || !value.slice(0, separator).trim()) return null
-  const slot = value.slice(separator + 1)
-  return isPartSlot(slot) ? slot : null
+  const key = value.slice(separator + 1)
+  return isPartKey(key) ? key : null
+}
+
+export function getPartIdSlot(value: unknown): PartSlot | null {
+  const key = getPartIdKey(value)
+  return isPartSlot(key) ? key : null
 }
 
 export function getPartDefinitions(catalog: MechaCatalog): PartDefinition[] {
-  return catalog.list().flatMap((model) => model.stages.flatMap((part) => {
-    const slot = part.slot ?? PART_SLOTS[part.stage - 1]
-    return slot ? [{ id: getPartId(model.id, slot), mechaId: model.id, mechaName: model.name,
-      stage: part.stage, slot, name: part.name, asset: part.asset }] : []
-  }))
+  return catalog.list().flatMap((model) => model.stages.map((part) => ({
+    id: getPartId(model.id, getStagePartKey(part)), mechaId: model.id, mechaName: model.name,
+    stage: part.stage, slot: getStagePartSlot(part), name: part.name, asset: part.asset,
+  })))
 }
 
 export function unlockPart(parts: readonly string[], partId: string): string[] {

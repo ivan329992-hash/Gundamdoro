@@ -27,6 +27,7 @@ describe('component composition renderer', () => {
     const calibrated = getPartDefinitions(appDependencies.catalog).filter((part) => part.mechaId.startsWith('mecha-'))
     expect(calibrated).toHaveLength(30)
     for (const part of calibrated) {
+      if (!part.slot) throw new Error('Original component requires a calibrated slot')
       const layout = getCompositionLayout(part.mechaId, part.slot)!
       expect(layout).toBeTruthy()
       const [x, y, width, height] = layout.bounds

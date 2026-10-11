@@ -35,12 +35,12 @@ function finishBuild(store: ReturnType<typeof createAppStore>, fake: ReturnType<
 }
 
 describe('multiple buildable models', () => {
-  it.each(bundledCatalog.list())('completes and restores the five-focus loop for $id', async (model) => {
+  it.each(bundledCatalog.list())('completes and restores the manifest-sized focus loop for $id', async (model) => {
     const fake = createFakeApp()
     fake.dependencies.catalog = bundledCatalog
     const store = createAppStore(fake.dependencies)
     store.getState().selectMecha(model.id)
-    for (let stage = 1; stage <= 5; stage++) {
+    for (let stage = 1; stage <= model.totalStages; stage++) {
       store.getState().startFocus()
       const sessionId = store.getState().timer.sessionId!
       fake.setNow(store.getState().timer.endAt!)
@@ -48,19 +48,19 @@ describe('multiple buildable models', () => {
       store.getState().completeFocus(sessionId)
       expect(store.getState().assembly.currentStage).toBe(stage)
       store.getState().finishPartReveal()
-      expect(store.getState().phase).toBe(stage < 5 ? 'BREAK' : 'READY')
-      if (stage < 5) store.getState().endBreak()
+      expect(store.getState().phase).toBe(stage < model.totalStages ? 'BREAK' : 'READY')
+      if (stage < model.totalStages) store.getState().endBreak()
     }
     expect(store.getState().hangar).toHaveLength(0)
     store.getState().startAssembly()
     store.getState().finishAssemblyAnimation()
     store.getState().finishAssemblyAnimation()
     expect(store.getState().hangar).toHaveLength(1)
-    expect(store.getState().hangar[0]).toMatchObject({ mechaId: model.id, mechaName: model.name, completedFocusSessions: 5, totalFocusedMinutes: 125 })
+    expect(store.getState().hangar[0]).toMatchObject({ mechaId: model.id, mechaName: model.name, completedFocusSessions: model.totalStages, totalFocusedMinutes: model.totalStages * 25 })
     const restored = createAppStore(fake.dependencies)
     await initializeAppStore(restored)
     expect(restored.getState().assembly.mechaId).toBe(model.id)
-    expect(restored.getState().unlockedParts).toHaveLength(5)
+    expect(restored.getState().unlockedParts).toHaveLength(model.totalStages)
     expect(restored.getState().hangar).toEqual(store.getState().hangar)
     restored.getState().resetMecha()
     expect(restored.getState().assembly.mechaId).toBe(model.id)

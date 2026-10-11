@@ -2,13 +2,13 @@
   "id": "wing-zero-ew",
   "name": "飞翼零式 EW",
   "description": "羽翼天使 · 非官方同人素材",
-  "totalStages": 5,
-  "finalAsset": "final/assembled.png",
+  "finalAsset": "final/assembled-decals-v2.png",
   "stages": [
-    { "stage": 1, "name": "TORSO + WINGS", "asset": "parts/torso.png", "slot": "torso" },
-    { "stage": 2, "name": "HEAD", "asset": "parts/head-corrected.png", "slot": "head" },
+    { "stage": 1, "name": "TORSO", "asset": "parts/torso.png", "slot": "torso" },
+    { "stage": 2, "name": "HEAD", "asset": "parts/head-clean-v3.png", "slot": "head" },
     { "stage": 3, "name": "LEFT ARM", "asset": "parts/left-arm.png", "slot": "left-arm" },
     { "stage": 4, "name": "RIGHT ARM", "asset": "parts/right-arm.png", "slot": "right-arm" },
-    { "stage": 5, "name": "LEG UNIT", "asset": "parts/leg-unit.png", "slot": "legs" }
+    { "stage": 5, "name": "LEG UNIT", "asset": "parts/leg-unit.png", "slot": "legs" },
+    { "stage": 6, "name": "WINGS", "asset": "parts/wings.png", "partId": "wings" }
   ]
 }

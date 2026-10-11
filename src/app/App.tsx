@@ -1,5 +1,6 @@
 /** 【UI·总调度】读 phase 决定渲染哪块屏；按钮只调 store actions，自己不改业务状态。 */
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { AbandonBuildDialog } from '../components/Mecha/AbandonBuildDialog'
 import { AssemblyScreen } from '../components/Mecha/AssemblyScreen'
 import { BreakScreen } from '../components/Break/BreakScreen'
 import { CompleteScreen } from '../components/Complete/CompleteScreen'
@@ -35,6 +36,27 @@ export function App() {
   const [hangarOpen, setHangarOpen] = useState(false)
   const [modelsOpen, setModelsOpen] = useState(false)
   const [partsOpen, setPartsOpen] = useState(false)
+  const [abandonOpen, setAbandonOpen] = useState(false)
+  const resumeAfterCancel = useRef(false)
+  const openAbandon = () => {
+    const state = useAppStore.getState()
+    resumeAfterCancel.current = state.phase === 'FOCUS' && state.timer.status === 'running'
+    if (resumeAfterCancel.current) state.pauseTimer()
+    resumeAfterCancel.current = resumeAfterCancel.current && useAppStore.getState().timer.status === 'paused'
+    setAbandonOpen(true)
+  }
+  const abandonDialog = <AbandonBuildDialog open={abandonOpen}
+    onCancel={() => {
+      setAbandonOpen(false)
+      if (resumeAfterCancel.current) useAppStore.getState().resumeTimer()
+      resumeAfterCancel.current = false
+    }}
+    onConfirm={() => {
+      useAppStore.getState().abandonBuild()
+      resumeAfterCancel.current = false
+      setAbandonOpen(false)
+      if (canSelectMecha(useAppStore.getState())) setModelsOpen(true)
+    }} />
   const ownedCount = useAppStore((state) => state.unlockedParts.length)
   const prepareWorkbench = useAppStore((state) => state.prepareWorkbench)
   const openParts = () => { if (CUSTOM_ASSEMBLY_ENABLED) prepareWorkbench(); setPartsOpen(true) }
@@ -71,7 +93,7 @@ export function App() {
   }
 
   if (phase === 'PART_REWARD') {
-    return <PartRewardScreen />
+    return <><PartRewardScreen />{abandonDialog}</>
   }
 
   if (phase === 'ASSEMBLY') {
@@ -79,7 +101,7 @@ export function App() {
   }
 
   if (phase === 'BREAK') {
-    return <BreakScreen />
+    return <><BreakScreen onAbandonBuild={openAbandon} />{abandonDialog}</>
   }
 
   if (phase === 'COMPLETE') {
@@ -102,6 +124,7 @@ export function App() {
 
   return (
     <main className="app-shell">
+      {abandonDialog}
       <p className="eyebrow">GUNDAMDORO / MVP 0.1</p>
       <section className={`hero-card${isActive ? ' focus-card' : ''}`} aria-labelledby="app-title">
         <div className={`status-dot${isActive ? ' is-active' : ''}`} aria-hidden="true" />
@@ -117,13 +140,14 @@ export function App() {
           ? <button type="button" onClick={startAssembly}>开始拼装</button>
           : <button type="button" onClick={() => startFocus()}>START FOCUS</button>)}
         {isActive && (
-          <div className="timer-controls">
+          <div className="timer-controls focus-controls">
             <button type="button" onClick={() => (isPaused ? resumeTimer() : pauseTimer())}>
-              {isPaused ? 'RESUME' : 'PAUSE'}
+              {isPaused ? '继续' : '暂停'}
             </button>
             <button type="button" className="secondary-button" onClick={cancelTimer}>
-              CANCEL
+              取消本次
             </button>
+            <button type="button" className="secondary-button" onClick={openAbandon}>放弃制作</button>
           </div>
         )}
         <p className="bootstrap-note">
@@ -131,12 +155,12 @@ export function App() {
         </p>
         {phase === 'READY' && (
           <div className="ready-navigation">
-            <button type="button" className="secondary-button" disabled={!canChangeModel} aria-describedby={!canChangeModel ? 'model-lock-note' : undefined} onClick={() => setModelsOpen(true)}>选择机型</button>
+            <button type="button" className="secondary-button" onClick={() => canChangeModel ? setModelsOpen(true) : openAbandon()}>{canChangeModel ? '选择机型' : '放弃并换机型'}</button>
             <button type="button" className="secondary-button" onClick={() => setSettingsOpen(true)}>SETTINGS</button>
             <button type="button" className="secondary-button" onClick={() => setHangarOpen(true)}>仓库（{hangarCount}）</button>
           </div>
         )}
-        {phase === 'READY' && !canChangeModel && <p id="model-lock-note" className="bootstrap-note">完成本轮拼装后可更换机型</p>}
+        {phase === 'READY' && !canChangeModel && <p className="bootstrap-note">更换机型需确认放弃本轮进度，永久库存保留</p>}
         {phase === 'READY' && <button type="button" className="secondary-button workshop-entry" onClick={openParts}>{CUSTOM_ASSEMBLY_ENABLED ? '配件仓库与拼装' : '配件仓库'}（{ownedCount}）</button>}
       </section>
       <SettingsDialog
