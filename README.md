@@ -14,7 +14,7 @@ READY -> FOCUS -> PART_REWARD -> BREAK -> READY (parts 1 through N-1)
 READY (N / N) -> click Assemble -> ASSEMBLY -> COMPLETE
 ```
 
-Finished builds are automatically archived in the local hangar. Open `仓库` from READY or COMPLETE to view model images, completion dates and per-build focus totals. Build Again preserves all archived models; repeated builds of the same model are saved separately.
+Finished builds are automatically archived in the local hangar. Open `仓库` from READY or COMPLETE: repeated builds of one model share one card showing completion count, while every original record stays saved. Click the card or `查看机体档案` for a mecha-style dossier with full-model art, role, component count, story, design features and cumulative personal statistics. Capability indices are fictional display settings, not official performance; Wing Zero EW content is explicitly unofficial application-only interpretation. Escape returns to the hangar first, then closes it. Unknown models and historical dates retain honest unavailable/unknown labels. Build Again preserves all archived models.
 
 Click `选择机型` before collecting the first part, or after completing a build, to choose MECHA-01 through MECHA-06 or `飞翼零式 EW`. Each model's part list determines its focus count: the six original models currently have five parts each, while Wing Zero EW has six. To change an unfinished build, click `放弃制作` during focus, `放弃制作并换机型` during break, or `放弃并换机型` in READY and confirm. This clears only current-build progress/statistics and opens model selection; permanent inventory, hangar, settings and drafts survive. Confirmation pauses running focus; cancel/Escape resumes it, while an already paused timer stays paused. `取消本次` only cancels one session and retains collection progress. `BUILD AGAIN` repeats the selected model.
 
@@ -53,6 +53,10 @@ npx tauri dev
 ```
 
 Use `npm test` for the timer/store regression suite. Browser preview at `http://localhost:1420/` updates while editing. In BREAK, click `结束休息`; after collecting all parts, click `开始拼装`.
+
+READY now offers 15/25/45-minute shortcuts; settings still accept custom durations. The timer displays estimated local finish time, or a paused message until resumed. Settings also control completion sound, system notifications (off until explicitly enabled/permitted), and the desktop mini timer (on by default).
+
+In the Windows app, minimize via the title bar or `最小化`: a draggable, always-on-top mini timer remains visible, with pause/resume, hide and return-to-main controls. Closing the main app exits both windows; minimizing does not stop the timer. The mini is a read-only state mirror, so it cannot duplicate collections or overwrite saves. In a browser, `迷你计时预览` displays an in-page overlay only, not a desktop widget. Windows notifications should be verified with the installed app and may be suppressed by system notification/quiet-mode settings. Audio is unlocked by interaction and may be unavailable before the first click. No reminders run while the entire app is closed.
 
 Stored version-0 progress is migrated automatically to the five-part workflow; settings and focus history are preserved.
 

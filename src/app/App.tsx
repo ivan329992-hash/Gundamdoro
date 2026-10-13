@@ -13,16 +13,25 @@ import { MechaDisplay } from '../components/Mecha/MechaDisplay'
 import { FocusPartDisplay } from '../components/Mecha/FocusPartDisplay'
 import { PartRewardScreen } from '../components/Mecha/PartRewardScreen'
 import { HangarScreen } from '../components/Hangar/HangarScreen'
+import { groupHangar } from '../domain/hangar'
 import { getMechaManifest } from '../mecha/loader'
 import { useAppStore } from '../store/useAppStore'
 import { canSelectMecha } from '../domain/collection'
 import { ModelSelectionScreen } from '../components/Mecha/ModelSelectionScreen'
 import { InventoryScreen } from '../components/Inventory/InventoryScreen'
 import { CUSTOM_ASSEMBLY_ENABLED } from './features'
+import { EstimatedEnd } from '../components/Timer/EstimatedEnd'
+import { TimerExperienceTools, useTimerExperience } from '../components/Timer/TimerExperience'
+import { prepareSound } from '../adapters/platform/reminders'
 
 export function App() {
+  const reminderError = useTimerExperience()
   useTimerTick()
   usePhaseTransitions()
+  return <><TimerExperienceTools error={reminderError} /><AppContent /></>
+}
+
+function AppContent() {
 
   const phase = useAppStore((state) => state.phase)
   const timer = useAppStore((state) => state.timer)
@@ -60,7 +69,7 @@ export function App() {
   const ownedCount = useAppStore((state) => state.unlockedParts.length)
   const prepareWorkbench = useAppStore((state) => state.prepareWorkbench)
   const openParts = () => { if (CUSTOM_ASSEMBLY_ENABLED) prepareWorkbench(); setPartsOpen(true) }
-  const hangarCount = useAppStore((state) => state.hangar.length)
+  const hangarCount = useAppStore((state) => groupHangar(state.hangar).length)
   const startFocus = useAppStore((state) => state.startFocus)
   const pauseTimer = useAppStore((state) => state.pauseTimer)
   const resumeTimer = useAppStore((state) => state.resumeTimer)
@@ -112,8 +121,9 @@ export function App() {
           open={settingsOpen}
           focusMinutes={settings.focusMinutes}
           breakMinutes={settings.breakMinutes}
-          onSave={(focusMinutes, breakMinutes) => {
-            updateSettings({ focusMinutes, breakMinutes })
+          preferences={settings}
+          onSave={(focusMinutes, breakMinutes, preferences) => {
+            updateSettings({ focusMinutes, breakMinutes, ...preferences })
             setSettingsOpen(false)
           }}
           onClose={() => setSettingsOpen(false)}
@@ -135,13 +145,17 @@ export function App() {
         {!allPartsCollected && <div className="timer-panel" aria-live="polite">
           <span className="timer-label">{isActive ? 'FOCUS TIMER' : 'SESSION TIMER'}</span>
           <strong className="timer-value">{formatTime(timer.remainingMs)}</strong>
+          <EstimatedEnd timer={timer} />
+        </div>}
+        {phase === 'READY' && !allPartsCollected && <div className="quick-durations" aria-label="快捷专注时长">
+          {[15, 25, 45].map((minutes) => <button key={minutes} type="button" className="secondary-button" aria-pressed={settings.focusMinutes === minutes} onClick={() => updateSettings({ focusMinutes: minutes })}>{minutes} 分钟</button>)}
         </div>}
         {phase === 'READY' && (allPartsCollected
           ? <button type="button" onClick={startAssembly}>开始拼装</button>
-          : <button type="button" onClick={() => startFocus()}>START FOCUS</button>)}
+          : <button type="button" onClick={() => { void prepareSound(); startFocus() }}>START FOCUS</button>)}
         {isActive && (
           <div className="timer-controls focus-controls">
-            <button type="button" onClick={() => (isPaused ? resumeTimer() : pauseTimer())}>
+            <button type="button" onClick={() => { void prepareSound(); if (isPaused) resumeTimer(); else pauseTimer() }}>
               {isPaused ? '继续' : '暂停'}
             </button>
             <button type="button" className="secondary-button" onClick={cancelTimer}>
@@ -167,8 +181,9 @@ export function App() {
         open={settingsOpen}
         focusMinutes={settings.focusMinutes}
         breakMinutes={settings.breakMinutes}
-        onSave={(focusMinutes, breakMinutes) => {
-          updateSettings({ focusMinutes, breakMinutes })
+        preferences={settings}
+        onSave={(focusMinutes, breakMinutes, preferences) => {
+          updateSettings({ focusMinutes, breakMinutes, ...preferences })
           setSettingsOpen(false)
         }}
         onClose={() => setSettingsOpen(false)}

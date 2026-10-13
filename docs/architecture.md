@@ -20,6 +20,10 @@ app/dependencies.ts supplies runtime, catalog, storage and asset/scheduler adapt
 
 ## Runtime and presentation
 
+Daily timer presentation lives in `application/timerExperience.ts`: pure ETA, read-only timer projection and successful-completion notice detection. `adapters/platform/reminders.ts` owns synthesized audio and browser/Tauri notification permission/delivery. Optional settings booleans extend the existing v5 envelope without changing top-level fields or legacy duration defaults.
+
+The main app alone hydrates/persists, ticks the state machine and observes completions. The native `mini` entry renders only `MiniTimerWindow`, consumes targeted Tauri projection events and sends pause/sync requests to main. It never runs initialization, store actions, reveal scheduling or completion reminders. `miniWindow.ts` owns window APIs, minimize/restore and listener/heartbeat cleanup. Browser preview consumes the same projection locally; it does not claim OS-level floating-window support. Native capabilities are local-window scoped, with notification rights limited to main.
+
 Timestamp calculations take an explicit time. Store actions retain optional `now` arguments and otherwise use the injected clock. UUID generation and conversion of configured minutes are supplied by the runtime adapter. The existing development `?fast` flag still means seconds; production ignores it.
 
 Application phase policy keeps part reveal at 2800ms, normal assembly completion at 4800ms, and reduced-motion assembly completion at 1400ms. The app-level phase hook schedules completion actions through a scheduler port. PartRewardScreen renders rewards; AssemblyScreen schedules only its local image reveal (2200ms / 400ms). Neither screen changes product phase or performs archiving.
@@ -33,6 +37,8 @@ Storage acquisition is deferred to each operation so a temporary access failure 
 An adapter for a future persistence engine must also define write ordering, transaction boundaries and failure handling for that engine. Promise-compatible signatures and startup waiting do not implement cloud sync or database transactions. Inventory and workbench data currently share the local app snapshot; image bytes are never stored in it.
 
 ## Extension rules
+
+`domain/hangar.ts` derives read-only model/recipe summaries from the archived records; it never deduplicates persisted history. `mecha/profiles.ts` holds local fictional dossier content separately from manifests, timers and storage. The hangar/detail UI holds only transient selection and focus state. Unknown model IDs remain viewable without requiring a profile or registered asset. No schema change is needed for grouping or dossiers.
 
 Add business rules under domain and coordinate cross-module changes in application use cases. Avoid store-to-store calls and imports from domain/application into UI, adapters or Zustand. Bind platform-specific storage, notifications, assets and app lifecycle behavior in adapters or the composition root.
 

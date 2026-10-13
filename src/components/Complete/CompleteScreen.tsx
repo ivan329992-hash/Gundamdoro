@@ -3,6 +3,7 @@ import { getMechaManifest, getFinalAsset } from '../../mecha/loader'
 import { useAppStore } from '../../store/useAppStore'
 import { AssetImage } from '../Mecha/AssetImage'
 import { CUSTOM_ASSEMBLY_ENABLED } from '../../app/features'
+import { groupHangar } from '../../domain/hangar'
 
 interface CompleteScreenProps {
   onOpenSettings: () => void
@@ -15,7 +16,7 @@ export function CompleteScreen({ onOpenSettings, onOpenHangar, onOpenModels, onO
   const assembly = useAppStore((state) => state.assembly)
   const totalFocusedMinutes = useAppStore((state) => state.totalFocusedMinutes)
   const resetMecha = useAppStore((state) => state.resetMecha)
-  const hangarCount = useAppStore((state) => state.hangar.length)
+  const hangarCount = useAppStore((state) => groupHangar(state.hangar).length)
   const manifest = getMechaManifest(assembly.mechaId)
   const fullAsset = getFinalAsset(assembly.mechaId)
 

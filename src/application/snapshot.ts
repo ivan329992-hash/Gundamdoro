@@ -1,5 +1,5 @@
 /** 【应用·存档】快照校验与旧版→v5 迁移；库存和拼装配方独立持久化。 */
-import { DEFAULT_SETTINGS } from '../domain/settings'
+import { normalizeSettings } from '../domain/settings'
 import { createInitialTimer, getDurationMs, type TimerState } from '../domain/timer'
 import type { AppData, AppPhase, BuiltMecha, Composition, DraftComposition, WorkbenchDraft } from '../domain/types'
 import { clampInteger, clampNumber, isAppPhase, isFiniteNumber, isRecord, isTimerStatus } from '../domain/validation'
@@ -123,10 +123,7 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
   function normalizeData(value: unknown, migrateInventory = false, migratePartCount = false): AppData {
     const source = isRecord(value) ? value : {}
     const rawSettings = isRecord(source.settings) ? source.settings : {}
-    const settings = {
-      focusMinutes: clampInteger(rawSettings.focusMinutes, DEFAULT_SETTINGS.focusMinutes, 1, 120),
-      breakMinutes: clampInteger(rawSettings.breakMinutes, DEFAULT_SETTINGS.breakMinutes, 1, 60),
-    }
+    const settings = normalizeSettings(rawSettings)
     let phase = isAppPhase(source.phase) ? source.phase : 'READY'
     const rawAssembly = isRecord(source.assembly) ? source.assembly : {}
     const mechaId = typeof rawAssembly.mechaId === 'string' && rawAssembly.mechaId.trim()

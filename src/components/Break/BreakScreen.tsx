@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { getBreakAsset, getMechaManifest, getNextStageDefinition } from '../../mecha/loader'
 import { formatTime } from '../../lib/timer'
 import { useAppStore } from '../../store/useAppStore'
+import { EstimatedEnd } from '../Timer/EstimatedEnd'
 
 export function BreakScreen({ onAbandonBuild }: { onAbandonBuild?: () => void }) {
   const timer = useAppStore((state) => state.timer)
@@ -37,6 +38,7 @@ export function BreakScreen({ onAbandonBuild }: { onAbandonBuild?: () => void })
         <h1 id="break-title">BREAK</h1>
         <p className="break-next">NEXT PART <strong>{nextStage?.name ?? 'MECHA COMPLETE'}</strong></p>
         <strong className="break-timer" aria-live="polite">{formatTime(timer.remainingMs)}</strong>
+        <EstimatedEnd timer={timer} />
         <p className="bootstrap-note">Take a short recovery break.</p>
         <button type="button" className="secondary-button" onClick={endBreak}>结束休息</button>
         {onAbandonBuild && <button type="button" className="secondary-button" onClick={onAbandonBuild}>放弃制作并换机型</button>}

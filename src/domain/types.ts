@@ -54,6 +54,9 @@ export interface BuiltMecha {
 export interface Settings {
   focusMinutes: number
   breakMinutes: number
+  soundEnabled?: boolean
+  notificationsEnabled?: boolean
+  miniTimerEnabled?: boolean
 }
 
 export interface AssemblyState {

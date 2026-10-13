@@ -118,6 +118,30 @@ button:disabled { cursor: not-allowed; opacity: .7; }
 .focus-card .phase-label { margin: 4px 0 10px; }
 .focus-card .timer-panel { margin-top: 10px; padding: 6px 12px; }
 .focus-card .bootstrap-note { margin-top: 6px; }
+.estimated-end { margin: 4px 0 0; color: #9cb5bf; font-size: 11px; }
+.quick-durations { display: flex; gap: 8px; margin-top: 10px; }
+.quick-durations button { margin: 0; padding: 8px 4px; font-size: 11px; }
+.quick-durations button[aria-pressed="true"] { box-shadow: inset 0 0 0 1px #57d6a0; color: #57d6a0; }
+.settings-dialog { max-height: calc(100vh - 48px); overflow: auto; }
+.settings-dialog .settings-toggle { display: flex; align-items: center; gap: 10px; letter-spacing: normal; }
+.settings-toggle input { width: 16px; height: 16px; padding: 0; accent-color: #57d6a0; }
+.settings-hint { font-size: 11px; color: #8294a5; line-height: 1.6; }
+.experience-toolbar { position: fixed; top: 6px; right: 6px; z-index: 6; }
+.experience-toolbar button { margin: 0; width: auto; padding: 5px 8px; font-size: 10px; letter-spacing: 0; opacity: .9; }
+.experience-error { position: fixed; bottom: 8px; left: 8px; max-width: calc(100% - 16px); z-index: 15; background: #172b36; padding: 10px; color: #ffbd9b; font-size: 12px; }
+.mini-window-body { min-width: 0; min-height: 0; margin: 0; overflow: hidden; background: #0d1820; }
+.mini-timer { box-sizing: border-box; width: 300px; padding: 12px 16px; border: 1px solid #37564e; background: #0d1820; color: #e8edf2; text-align: center; }
+.mini-timer header { display: flex; justify-content: space-between; align-items: center; cursor: move; font-size: 11px; color: #9fb6be; user-select: none; }
+.mini-timer header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-timer header button { width: 24px; padding: 0; margin: 0; background: transparent; color: #9fb6be; font-size: 20px; }
+.mini-status { font-size: 10px; color: #57d6a0; margin: 6px 0 0; }
+.mini-time { display: block; font-size: 40px; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.mini-target { margin: 4px 0 10px; color: #8294a5; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-controls { display: flex; gap: 8px; }
+.mini-controls button { padding: 8px 4px; margin: 0; font-size: 11px; }
+.mini-preview { position: fixed; right: 12px; bottom: 12px; z-index: 9; width: 300px; box-shadow: 0 12px 40px #0009; }
+.mini-preview > p { font-size: 10px; padding: 8px; margin: 0; background: #1a2c38; color: #9fb6be; text-align: center; }
+.mini-waiting { color: #9fb6be; font-size: 12px; padding: 20px; }
 
 .ready-navigation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .ready-navigation button { min-width: 0; padding-left: 6px; padding-right: 6px; font-size: 11px; letter-spacing: .04em; }
@@ -143,6 +167,36 @@ button:disabled { cursor: not-allowed; opacity: .7; }
 .hangar-stats dt { color: #8294a5; }
 .hangar-stats dd { margin: 0; color: #57d6a0; text-align: right; overflow-wrap: anywhere; }
 .hangar-unavailable { padding: 12px; color: #8294a5; font-size: 11px; text-align: center; }
+.hangar-owned { color: #65e7c0; font-size: 12px; }
+.hangar-detail-button { margin-top: 14px; padding: 11px 8px; font-size: 12px; }
+.hangar-detail-button span { margin-left: 8px; }
+.hangar-content:has(.dossier) { max-width: 1100px; }
+.dossier { display: grid; gap: 20px; }
+.dossier-visual { position: relative; display: grid; place-items: center; height: 390px; padding: 44px 20px 34px; border: 1px solid #35555c; background: linear-gradient(#5bdac009 1px, transparent 1px), linear-gradient(90deg, #5bdac009 1px, transparent 1px), radial-gradient(ellipse, #233c45, #0c151d 70%); background-size: 32px 32px, 32px 32px, auto; overflow: hidden; }
+.dossier-visual .mecha-image { height: 100%; max-height: 100%; min-height: 0; }
+.dossier-stamp, .dossier-serial { position: absolute; left: 16px; color: #79c7bc; font: 10px monospace; letter-spacing: .12em; }
+.dossier-stamp { top: 16px; }
+.dossier-serial { bottom: 16px; }
+.dossier-information { min-width: 0; }
+.dossier-title { border-left: 3px solid #65e7c0; padding-left: 16px; margin-bottom: 20px; }
+.dossier-title h2 { margin: 10px 0; font-size: 28px; overflow-wrap: anywhere; }
+.dossier-title > p:last-child { color: #8caaa9; font-size: 12px; letter-spacing: .1em; }
+.dossier-panel { padding: 18px; border: 1px solid #2b454e; background: #101d26; margin-top: 12px; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.dossier-panel h3 { margin: 0 0 16px; color: #72ddc1; font-size: 12px; letter-spacing: .12em; }
+.dossier-facts { display: grid; gap: 12px; margin: 0; font-size: 12px; }
+.dossier-facts > div { display: flex; justify-content: space-between; gap: 16px; }
+.dossier-facts dt { flex-shrink: 0; color: #94a9b7; }
+.dossier-facts dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.dossier-disclaimer { color: #92a5b2; font-size: 11px; line-height: 1.7; }
+.dossier-story { color: #c1cfd8; font-size: 13px; line-height: 1.9; margin: 0; }
+.dossier-features { padding-left: 18px; color: #95b2b7; font-size: 12px; line-height: 1.9; }
+.dossier-ratings { display: grid; gap: 12px; margin-top: 16px; }
+.dossier-ratings > div { display: grid; grid-template-columns: 32px 1fr 26px; align-items: center; gap: 12px; font-size: 11px; color: #9bb6bb; }
+.dossier-ratings meter { width: 100%; height: 10px; accent-color: #65e7c0; }
+.dossier-ratings meter::-webkit-meter-bar { background: #22353e; border: 0; border-radius: 0; }
+.dossier-ratings meter::-webkit-meter-optimum-value { background: #65e7c0; }
+.hangar-detail-button:focus-visible, .hangar-back:focus-visible { outline: 2px solid #65e7c0; outline-offset: 4px; }
+@media (min-width: 800px) { .dossier { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; } .dossier-visual { position: sticky; top: 20px; height: 620px; } }
 
 .model-screen { min-height: 100vh; padding: 24px 16px; background: radial-gradient(circle at 50% 0%, #1a2734, #0b0f14 58%); }
 .model-content { max-width: 760px; margin: 0 auto; }

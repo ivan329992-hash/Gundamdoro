@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "reminders",
+  "description": "Completion notification permissions for the sole timer owner",
+  "windows": ["main"],
+  "permissions": ["notification:default"]
+}

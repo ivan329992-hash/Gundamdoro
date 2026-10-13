@@ -6,6 +6,8 @@ import { App } from './app/App'
 import { useAppStore } from './store/useAppStore'
 import { initializeAppStore } from './store/createAppStore'
 import { StartupScreen } from './components/Startup/StartupScreen'
+import { isMiniWindow } from './adapters/platform/miniWindow'
+import { MiniTimerWindow } from './components/Timer/MiniTimer'
 
 const root = createRoot(document.getElementById('root')!)
 let starting = false
@@ -28,4 +30,5 @@ async function startApp() {
   }
 }
 
-void startApp()
+if (isMiniWindow()) root.render(<MiniTimerWindow />)
+else void startApp()

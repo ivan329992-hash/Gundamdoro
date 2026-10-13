@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "timer-windows",
+  "description": "Local main and read-only mini timer windows",
+  "windows": ["main", "mini"],
+  "permissions": [
+    "core:event:default",
+    "core:window:default",
+    "core:window:allow-minimize",
+    "core:window:allow-unminimize",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-start-dragging"
+  ]
+}
