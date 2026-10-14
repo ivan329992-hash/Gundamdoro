@@ -34,6 +34,7 @@ export function createAppStore(dependencies: AppDependencies) {
       syncTimer: (now) => set((state) => useCases.syncTimer(state, now)),
       prepareWorkbench: () => set((state) => workbench.prepareWorkbench(state)),
       selectWorkbenchPart: (slot, partId) => set((state) => workbench.selectWorkbenchPart(state, slot, partId)),
+      clearWorkbenchPart: (slot) => set((state) => workbench.clearWorkbenchPart(state, slot)),
       setWorkbenchName: (name) => set((state) => workbench.setWorkbenchName(state, name)),
       randomizeWorkbench: () => set((state) => workbench.randomizeWorkbench(state)),
       saveCustomBuild: () => set((state) => workbench.saveCustomBuild(state)),

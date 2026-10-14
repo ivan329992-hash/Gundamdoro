@@ -19,7 +19,7 @@ export function groupHangar(hangar: BuiltMecha[]): HangarGroup[] {
   const groups = new Map<string, HangarGroup>()
   for (const entry of [...hangar].sort((a, b) => (b.completedAt ?? -1) - (a.completedAt ?? -1))) {
     const key = entry.kind === 'custom'
-      ? `custom:${entry.composition ? JSON.stringify(Object.entries(entry.composition).sort(([a], [b]) => a.localeCompare(b))) : entry.id}`
+      ? `custom:${entry.assemblyProfile ?? 'legacy'}:${entry.composition ? JSON.stringify(Object.entries(entry.composition).sort(([a], [b]) => a.localeCompare(b))) : entry.id}`
       : `model:${entry.mechaId}`
     const group = groups.get(key)
     if (!group) {

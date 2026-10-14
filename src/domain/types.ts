@@ -3,9 +3,11 @@ import type { TimerState } from './timer'
 
 export type AppPhase = 'READY' | 'FOCUS' | 'PART_REWARD' | 'ASSEMBLY' | 'BREAK' | 'COMPLETE'
 
-export type PartSlot = 'torso' | 'head' | 'left-arm' | 'right-arm' | 'legs'
-export type Composition = Record<PartSlot, string>
-export type DraftComposition = Partial<Composition>
+export type LegacyPartSlot = 'torso' | 'head' | 'left-arm' | 'right-arm' | 'legs'
+export type ModularPartSlot = Exclude<LegacyPartSlot, 'legs'> | 'hips' | 'left-leg' | 'right-leg'
+export type PartSlot = LegacyPartSlot | ModularPartSlot | 'wings'
+export type DraftComposition = Partial<Record<PartSlot, string>>
+export type Composition = DraftComposition & (Record<LegacyPartSlot, string> | Record<ModularPartSlot, string>)
 
 export interface WorkbenchDraft {
   id: string | null
@@ -38,6 +40,7 @@ export interface MechaManifest {
   totalStages: number
   stages: MechaStage[]
   finalAsset: string
+  legacyParts?: (MechaStage & { splitInto: string[]; splitBeforeVersion?: number })[]
 }
 
 export interface BuiltMecha {
@@ -49,6 +52,7 @@ export interface BuiltMecha {
   totalFocusedMinutes: number
   kind?: 'custom'
   composition?: Composition
+  assemblyProfile?: string
 }
 
 export interface Settings {
@@ -99,6 +103,7 @@ export interface AppActions {
   syncTimer: (now?: number) => void
   prepareWorkbench: () => void
   selectWorkbenchPart: (slot: PartSlot, partId: string) => void
+  clearWorkbenchPart: (slot: PartSlot) => void
   setWorkbenchName: (name: string) => void
   randomizeWorkbench: () => void
   saveCustomBuild: () => void

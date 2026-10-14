@@ -1,0 +1,14 @@
+{
+  "profile": "standard-front-v4",
+  "slot": "wings",
+  "joint": [543, 340],
+  "vector": [0, 780],
+  "parts": {
+    "wing-zero-ew": {
+      "asset": "parts/wings.png",
+      "image": [1086, 1448],
+      "segment": [[543, 410], [543, 1190]],
+      "mask": [[0, 50], [1086, 50], [1086, 1200], [0, 1200]]
+    }
+  }
+}

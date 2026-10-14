@@ -23,6 +23,8 @@ import { CUSTOM_ASSEMBLY_ENABLED } from './features'
 import { EstimatedEnd } from '../components/Timer/EstimatedEnd'
 import { TimerExperienceTools, useTimerExperience } from '../components/Timer/TimerExperience'
 import { prepareSound } from '../adapters/platform/reminders'
+import { appDependencies } from './dependencies'
+import { getPartDefinitions } from '../domain/inventory'
 
 export function App() {
   const reminderError = useTimerExperience()
@@ -66,7 +68,7 @@ function AppContent() {
       setAbandonOpen(false)
       if (canSelectMecha(useAppStore.getState())) setModelsOpen(true)
     }} />
-  const ownedCount = useAppStore((state) => state.unlockedParts.length)
+  const ownedCount = useAppStore((state) => getPartDefinitions(appDependencies.catalog).filter((part) => state.unlockedParts.includes(part.id)).length)
   const prepareWorkbench = useAppStore((state) => state.prepareWorkbench)
   const openParts = () => { if (CUSTOM_ASSEMBLY_ENABLED) prepareWorkbench(); setPartsOpen(true) }
   const hangarCount = useAppStore((state) => groupHangar(state.hangar).length)

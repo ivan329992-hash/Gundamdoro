@@ -30,5 +30,7 @@ async function startApp() {
   }
 }
 
-if (isMiniWindow()) root.render(<MiniTimerWindow />)
+if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('assembly-lab')) {
+  void import('./dev/AssemblyLab').then(({ default: AssemblyLab }) => root.render(<AssemblyLab />))
+} else if (isMiniWindow()) root.render(<MiniTimerWindow />)
 else void startApp()

@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .playwright-cli/
+.vitest/
 src-tauri/target/
 src-tauri/gen/
 output/

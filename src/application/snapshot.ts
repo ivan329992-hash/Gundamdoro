@@ -1,14 +1,15 @@
-/** 【应用·存档】快照校验与旧版→v5 迁移；库存和拼装配方独立持久化。 */
+/** 【应用·存档】快照校验与旧版→v8 迁移；库存和拼装配方独立持久化。 */
 import { normalizeSettings } from '../domain/settings'
 import { createInitialTimer, getDurationMs, type TimerState } from '../domain/timer'
 import type { AppData, AppPhase, BuiltMecha, Composition, DraftComposition, WorkbenchDraft } from '../domain/types'
 import { clampInteger, clampNumber, isAppPhase, isFiniteNumber, isRecord, isTimerStatus } from '../domain/validation'
 import type { AppDependencies } from './ports'
 import { archiveCompletedBuild } from './archiveBuild'
-import { createWorkbench, getPartDefinitions, getPartIdKey, getPartIdSlot, PART_SLOTS } from '../domain/inventory'
+import { ALL_PART_SLOTS, createWorkbench, getCompositionSlots, getPartDefinitions, getPartIdKey, getPartIdSlot } from '../domain/inventory'
+import { migrateSplitParts } from './splitPartsMigration'
 
 export const APP_STORAGE_KEY = 'gundamdoro-app-state'
-export const APP_STORAGE_VERSION = 5
+export const APP_STORAGE_VERSION = 8
 
 export function createSnapshotCodec(dependencies: AppDependencies) {
   const durationMs = (minutes: number) => getDurationMs(minutes, dependencies.runtime.millisecondsPerMinute())
@@ -17,7 +18,7 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
   function normalizeParts(value: unknown): DraftComposition {
     if (!isRecord(value)) return {}
     const parts: DraftComposition = {}
-    for (const slot of PART_SLOTS) {
+    for (const slot of ALL_PART_SLOTS) {
       const id = value[slot]
       if (getPartIdSlot(id) === slot) parts[slot] = id as string
     }
@@ -49,7 +50,7 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
         || seen.has(item.id)) continue
 
       const customParts = item.kind === 'custom' ? normalizeParts(item.composition) : null
-      if (customParts && !PART_SLOTS.every((slot) => customParts[slot])) continue
+      if (customParts && !getCompositionSlots(customParts).every((slot) => customParts[slot])) continue
       seen.add(item.id)
       entries.push({
         id: item.id,
@@ -61,6 +62,8 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
         completedFocusSessions: clampInteger(item.completedFocusSessions, 0, 0, Number.MAX_SAFE_INTEGER),
         totalFocusedMinutes: clampNumber(item.totalFocusedMinutes, 0, 0),
         ...(customParts ? { kind: 'custom' as const, composition: customParts as Composition } : {}),
+        ...(customParts && typeof item.assemblyProfile === 'string' && /^[a-z][a-z0-9-]{0,79}$/.test(item.assemblyProfile)
+          ? { assemblyProfile: item.assemblyProfile } : {}),
       })
     }
     return entries
@@ -204,7 +207,9 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
   function migrateLegacyData(value: unknown, version: number): AppData {
     if (version > APP_STORAGE_VERSION) throw new Error('The saved state requires a newer app version')
     const source = isRecord(value) ? value : {}
-    return normalizeData({ ...source, phase: version === 0 && source.phase === 'ASSEMBLY' ? 'PART_REWARD' : source.phase }, version < 5, version < 5)
+    const legacy = { ...source, phase: version === 0 && source.phase === 'ASSEMBLY' ? 'PART_REWARD' : source.phase }
+    const archivedModels = new Set(normalizeHangar(source.hangar).filter((entry) => entry.kind !== 'custom').map((entry) => entry.mechaId))
+    return normalizeData(version < 7 ? migrateSplitParts(legacy, dependencies, archivedModels, version) : legacy, version < 7, version < 5)
   }
 
   function encode(state: AppData): AppData {

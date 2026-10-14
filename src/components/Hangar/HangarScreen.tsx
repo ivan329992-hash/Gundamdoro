@@ -6,8 +6,6 @@ import { getFinalAsset } from '../../mecha/loader'
 import { useAppStore } from '../../store/useAppStore'
 import { AssetImage } from '../Mecha/AssetImage'
 import { CompositeMecha } from '../Mecha/CompositeMecha'
-import { getPartDefinitions, PART_SLOTS, PART_SLOT_LABELS } from '../../domain/inventory'
-import { appDependencies } from '../../app/dependencies'
 
 interface HangarScreenProps {
   onClose: () => void
@@ -27,7 +25,6 @@ export function HangarScreen({ onClose }: HangarScreenProps) {
   const restoreCard = useRef<string | null>(null)
   const cards = useRef(new Map<string, HTMLButtonElement>())
   const returnToList = () => { restoreCard.current = selectedKey; setSelectedKey(null) }
-  const parts = getPartDefinitions(appDependencies.catalog)
 
   useEffect(() => {
     const card = restoreCard.current ? cards.current.get(restoreCard.current) : null
@@ -73,7 +70,7 @@ export function HangarScreen({ onClose }: HangarScreenProps) {
                   window.scrollTo(0, 0)
                 }}>
                   <div className="hangar-preview">
-                    {entry.kind === 'custom' && entry.composition ? <CompositeMecha parts={entry.composition} label={`${entry.mechaName} 自定义成品`} />
+                    {entry.kind === 'custom' && entry.composition ? <CompositeMecha parts={entry.composition} profile={entry.assemblyProfile} label={`${entry.mechaName} 自定义成品`} />
                       : asset ? <AssetImage src={asset} alt={`${entry.mechaName} 成品`} className="mecha-image" /> : <span className="hangar-unavailable">机型资源暂不可用</span>}
                   </div>
                   <h2>{entry.mechaName}</h2>
@@ -82,9 +79,7 @@ export function HangarScreen({ onClose }: HangarScreenProps) {
                   <p className="hangar-date">
                     {entry.completedAt === null ? '历史成品 · 完成时间未记录' : <time dateTime={new Date(entry.completedAt).toISOString()}>{completedDate.format(entry.completedAt)}</time>}
                   </p>
-                  {entry.kind === 'custom' && entry.composition ? <dl className="hangar-stats">
-                    {PART_SLOTS.map((slot) => <div key={slot}><dt>{PART_SLOT_LABELS[slot]}</dt><dd>{parts.find((part) => part.id === entry.composition?.[slot])?.mechaName ?? '配件资源暂不可用'}</dd></div>)}
-                  </dl> : <dl className="hangar-stats">
+                  {entry.kind !== 'custom' && <dl className="hangar-stats">
                     <div><dt>累计专注次数</dt><dd>{group.sessions} 次</dd></div>
                     <div><dt>累计专注时长</dt><dd>{focusedMinutes.format(group.minutes)} 分钟</dd></div>
                   </dl>}

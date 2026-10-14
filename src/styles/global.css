@@ -208,6 +208,11 @@ button:disabled { cursor: not-allowed; opacity: .7; }
 .model-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
 .model-card { min-width: 0; padding: 12px; border: 1px solid #344756; border-radius: 14px; background: #111820; }
 .model-card.is-selected { border-color: #57d6a0; }
+.model-preview { position: relative; }
+.model-silhouette { filter: brightness(0) invert(1); opacity: .28; }
+.model-mystery-mark { display: none; position: absolute; inset: 0; place-items: center; color: #8ff2d2; font-size: 76px; font-weight: 800; text-shadow: 0 0 24px #57d6a055; pointer-events: none; }
+.model-silhouette + .model-mystery-mark { display: grid; }
+.model-card .model-reveal-note { color: #81b6a4; font-size: 10px; }
 .model-preview { height: clamp(220px, 40vh, 360px); overflow: hidden; border-radius: 9px; background: radial-gradient(circle at 50% 40%, #293a48, #0d141b 72%); }
 .model-card h2 { margin: 14px 0 8px; font-size: 18px; overflow-wrap: anywhere; }
 .model-card p { color: #a4b4c2; font-size: 11px; line-height: 1.6; }
@@ -228,6 +233,12 @@ button:disabled { cursor: not-allowed; opacity: .7; }
 .workbench-preview { position: sticky; top: 8px; z-index: 2; height: clamp(220px, 34vh, 360px); margin-bottom: 12px; overflow: hidden; border: 1px solid #344756; border-radius: 10px; background: radial-gradient(circle at 50% 36%, #293a48, #0d141b 72%); }
 .composite-mecha { width: 100%; height: 100%; position: relative; }
 .composite-svg { display: block; width: 100%; height: 100%; }
+.registered-mecha .composite-svg { padding: 6px; }
+.assembly-badge { position: absolute; top: 12px; left: 14px; color: #8babb8; font: 10px monospace; letter-spacing: .12em; z-index: 1; }
+.assembly-placeholder { position: absolute; bottom: 20px; left: 16px; right: 16px; text-align: center; color: #8babb8; font-size: 12px; }
+.assembly-compatibility, .assembly-unsupported { font-size: 11px; line-height: 1.8; color: #93b5c4; }
+.assembly-unsupported { color: #edc181; }
+.is-assembly .workbench-preview { height: clamp(280px, 44vh, 420px); }
 .composition-error { position: absolute; inset: auto 8px 8px; padding: 8px; border-radius: 6px; color: #ffb5a6; background: #111820ed; font-size: 10px; text-align: center; }
 .composition-error button { width: auto; margin: 6px 0 0; padding: 5px 8px; font-size: 10px; }
 .workbench-name { display: grid; gap: 8px; margin-top: 16px; color: #a4b4c2; font-size: 12px; }
@@ -235,8 +246,15 @@ button:disabled { cursor: not-allowed; opacity: .7; }
 .workbench-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .workbench-actions button { margin-top: 12px; padding: 12px 6px; font-size: 12px; letter-spacing: .02em; }
 .workbench-status { min-height: 20px; color: #a4b4c2; font-size: 12px; line-height: 1.7; }
+.workshop-screen.has-save-bar { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)); }
+.workbench-save-bar { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 4; width: min(860px, calc(100% - 24px)); padding: 12px 14px; border: 1px solid #476556; border-radius: 12px; background: #111c25f5; box-shadow: 0 -6px 24px #0008; }
+.workbench-save-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.workbench-save-summary strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.workbench-save-bar .workbench-status { margin: 6px 0 8px; }
+.workbench-save-bar .workbench-actions button { margin: 0; min-height: 44px; }
+.workbench-save-bar .open-hangar-button { flex-shrink: 0; width: auto; margin: 0; padding: 6px 10px; font-size: 11px; }
 .open-hangar-button { margin-top: 0; font-size: 12px; }
-.slot-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 16px; }
+.slot-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 16px; }
 .slot-picker button { min-width: 0; padding: 10px 2px; margin: 0; background: #253541; color: #c3d2de; font-size: 12px; letter-spacing: 0; }
 .slot-picker button[aria-pressed="true"] { outline: 1px solid #57d6a0; color: #57d6a0; }
 .slot-picker small { display: block; margin-top: 5px; color: #8294a5; font-size: 8px; overflow-wrap: anywhere; }

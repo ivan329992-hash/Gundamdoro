@@ -1,5 +1,6 @@
 /** 【应用·端口】业务需要的外部能力接口（时钟/ID/存储/调度/资源）。具体实现在 adapters。 */
 import type { MechaCatalog } from '../domain/catalog'
+import type { AssemblyPolicy } from '../domain/assembly'
 
 export interface RuntimePort {
   now(): number
@@ -27,4 +28,5 @@ export interface AppDependencies {
   catalog: MechaCatalog
   runtime: RuntimePort
   storage: () => KeyValueStorage
+  assembly?: AssemblyPolicy
 }

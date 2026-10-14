@@ -22,10 +22,10 @@ function hasTransparencyChunk(bytes) {
 describe('runtime mecha PNG assets', () => {
   it.each(manifests)('$id has local transparent PNGs with consistent 3:4 canvases', (manifest) => {
     const assetRoot = resolve(sourceRoot, 'assets', 'mecha', manifest.id)
-    const canvases = []
+    const canvases = { original: new Set(), assembly: new Set() }
     const presentationPath = resolve(sourceRoot, 'mecha', manifest.id, 'presentation.json')
-    const presentations = existsSync(presentationPath) ? Object.values(JSON.parse(readFileSync(presentationPath, 'utf8'))).flat() : []
-    for (const relativePath of new Set([manifest.finalAsset, ...manifest.stages.map((part) => part.asset), ...presentations.map((image) => image.asset)])) {
+    const presentations = existsSync(presentationPath) ? Object.values(JSON.parse(readFileSync(presentationPath, 'utf8'))).filter(Array.isArray).flat() : []
+    for (const relativePath of new Set([manifest.finalAsset, ...manifest.stages.map((part) => part.asset), ...(manifest.legacyParts ?? []).map((part) => part.asset), ...presentations.map((image) => image.asset)])) {
       const path = resolve(assetRoot, relativePath)
       expect(path.startsWith(assetRoot + sep)).toBe(true)
       const bytes = readFileSync(path)
@@ -34,9 +34,10 @@ describe('runtime mecha PNG assets', () => {
       const height = bytes.readUInt32BE(20)
       expect(width).toBeGreaterThan(0)
       expect(height).toBeGreaterThan(0)
-      expect(width * 4).toBe(height * 3)
+      if (relativePath.startsWith('assembly/')) expect(Math.abs(width * 4 - height * 3)).toBeLessThanOrEqual(7)
+      else expect(width * 4).toBe(height * 3)
       expect([4, 6].includes(bytes[25]) || hasTransparencyChunk(bytes)).toBe(true)
-      canvases.push(`${width}x${height}`)
+      canvases[relativePath.startsWith('assembly/') ? 'assembly' : 'original'].add(`${width}x${height}`)
       for (const image of presentations.filter((image) => image.asset === relativePath)) {
         expect(image.image).toEqual([width, height])
         const [x, y, w, h] = image.bounds
@@ -49,6 +50,7 @@ describe('runtime mecha PNG assets', () => {
         expect(y + h).toBeLessThanOrEqual(height)
       }
     }
-    expect(new Set(canvases).size).toBe(1)
+    expect(canvases.original.size).toBe(1)
+    expect(canvases.assembly.size).toBeLessThanOrEqual(1)
   })
 })

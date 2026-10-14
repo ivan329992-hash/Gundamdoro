@@ -3,7 +3,7 @@ import { bundledCatalog } from '../adapters/catalog/bundledCatalog'
 import { APP_STORAGE_KEY, APP_STORAGE_VERSION } from '../application/snapshot'
 import { createDefaultData } from '../application/state'
 import { createMechaCatalog } from '../domain/catalog'
-import { getPartDefinitions } from '../domain/inventory'
+import { getPartDefinitions, PART_SLOTS } from '../domain/inventory'
 import { createFakeApp } from '../test/fakeApp'
 import { createAppStore, initializeAppStore } from './createAppStore'
 
@@ -18,7 +18,7 @@ function legacyWing(fake: ReturnType<typeof wingApp>, phase: 'READY' | 'FOCUS' |
   data.phase = phase
   data.assembly = { mechaId: 'wing-zero-ew', currentStage: stage, totalStages: 5, completedFocusSessions: stage }
   data.totalFocusedMinutes = stage * 25
-  data.unlockedParts = getPartDefinitions(bundledCatalog).filter((part) => part.mechaId === 'wing-zero-ew' && part.stage <= stage).map((part) => part.id)
+  data.unlockedParts = PART_SLOTS.slice(0, stage).map((slot) => `wing-zero-ew:${slot}`)
   return data
 }
 
@@ -58,9 +58,10 @@ describe('variable part counts and compatibility', () => {
     fake.values.set(APP_STORAGE_KEY, JSON.stringify({ state: data, version: 4 }))
     const store = createAppStore(fake.dependencies)
     await initializeAppStore(store)
-    expect(store.getState().assembly).toEqual({ ...data.assembly, totalStages: 6 })
+    expect(store.getState().assembly).toEqual({ ...data.assembly, currentStage: stage >= 5 ? stage + 2 : stage, totalStages: 8 })
     expect(store.getState().totalFocusedMinutes).toBe(data.totalFocusedMinutes)
-    expect(store.getState().unlockedParts).toEqual(data.unlockedParts)
+    expect(store.getState().unlockedParts).toEqual(expect.arrayContaining(data.unlockedParts))
+    if (stage >= 5) expect(store.getState().unlockedParts).toEqual(expect.arrayContaining(['wing-zero-ew:hips', 'wing-zero-ew:left-leg', 'wing-zero-ew:right-leg']))
     expect(store.getState().unlockedParts).not.toContain('wing-zero-ew:wings')
     store.getState().startAssembly()
     expect(store.getState().phase).toBe('READY')
@@ -77,7 +78,7 @@ describe('variable part counts and compatibility', () => {
     await initializeAppStore(store)
     expect(store.getState().phase).toBe(phase)
     expect(store.getState().currentBuildId).toBe(data.currentBuildId)
-    expect(store.getState().assembly.currentStage).toBe(6)
+    expect(store.getState().assembly.currentStage).toBe(8)
     expect(store.getState().assembly.completedFocusSessions).toBe(5)
     expect(store.getState().totalFocusedMinutes).toBe(125)
     expect(store.getState().unlockedParts).toContain('wing-zero-ew:wings')
@@ -89,7 +90,7 @@ describe('variable part counts and compatibility', () => {
     await initializeAppStore(restored)
     expect(restored.getState().hangar).toHaveLength(1)
     restored.getState().resetMecha()
-    expect(restored.getState().assembly).toMatchObject({ currentStage: 0, totalStages: 6, completedFocusSessions: 0 })
+    expect(restored.getState().assembly).toMatchObject({ currentStage: 0, totalStages: 8, completedFocusSessions: 0 })
   })
 
   it('restores a paused legacy focus on its original part and processes it once', async () => {
@@ -105,17 +106,18 @@ describe('variable part counts and compatibility', () => {
     store.getState().syncTimer()
     store.getState().completeFocus('paused-leg-focus')
     expect(store.getState().assembly.currentStage).toBe(5)
-    expect(store.getState().unlockedParts).toContain('wing-zero-ew:legs')
+    expect(store.getState().unlockedParts).toContain('wing-zero-ew:hips')
+    expect(store.getState().unlockedParts).not.toContain('wing-zero-ew:left-leg')
     expect(store.getState().unlockedParts).not.toContain('wing-zero-ew:wings')
     store.getState().finishPartReveal()
     expect(store.getState().phase).toBe('BREAK')
   })
 
-  it('recovers an expired sixth focus once and retains the independent wing after reload', async () => {
+  it('recovers an expired old sixth focus once as wings and retains it after reload', async () => {
     const fake = wingApp()
     const data = legacyWing(fake, 'READY', 5)
     data.assembly.totalStages = 6
-    fake.values.set(APP_STORAGE_KEY, JSON.stringify({ state: data, version: APP_STORAGE_VERSION }))
+    fake.values.set(APP_STORAGE_KEY, JSON.stringify({ state: data, version: 6 }))
     const store = createAppStore(fake.dependencies)
     await initializeAppStore(store)
     store.getState().startFocus()
@@ -124,7 +126,7 @@ describe('variable part counts and compatibility', () => {
     await initializeAppStore(restored)
     restored.getState().recoverState()
     expect(restored.getState().phase).toBe('PART_REWARD')
-    expect(restored.getState().assembly).toMatchObject({ currentStage: 6, completedFocusSessions: 6 })
+    expect(restored.getState().assembly).toMatchObject({ currentStage: 8, completedFocusSessions: 6 })
     expect(restored.getState().unlockedParts.filter((id) => id === 'wing-zero-ew:wings')).toHaveLength(1)
     restored.getState().finishPartReveal()
     expect(restored.getState().phase).toBe('READY')

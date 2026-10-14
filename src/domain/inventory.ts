@@ -1,13 +1,17 @@
 import type { MechaCatalog } from './catalog'
-import type { AppPhase, Composition, DraftComposition, MechaStage, PartDefinition, PartSlot, WorkbenchDraft } from './types'
+import type { AppPhase, Composition, DraftComposition, LegacyPartSlot, MechaStage, ModularPartSlot, PartDefinition, PartSlot, WorkbenchDraft } from './types'
 
-export const PART_SLOTS: readonly PartSlot[] = ['torso', 'head', 'left-arm', 'right-arm', 'legs']
+export const PART_SLOTS: readonly LegacyPartSlot[] = ['torso', 'head', 'left-arm', 'right-arm', 'legs']
+export const MODULAR_PART_SLOTS: readonly ModularPartSlot[] = ['torso', 'head', 'left-arm', 'right-arm', 'hips', 'left-leg', 'right-leg']
+export const ALL_PART_SLOTS: readonly PartSlot[] = [...PART_SLOTS, 'hips', 'left-leg', 'right-leg', 'wings']
 export const PART_SLOT_LABELS: Record<PartSlot, string> = {
   torso: '躯干', head: '头部', 'left-arm': '左臂', 'right-arm': '右臂', legs: '腿部',
+  hips: '腰胯', 'left-leg': '左腿', 'right-leg': '右腿',
+  wings: '背包／翅膀',
 }
 
 export function isPartSlot(value: unknown): value is PartSlot {
-  return typeof value === 'string' && PART_SLOTS.includes(value as PartSlot)
+  return typeof value === 'string' && ALL_PART_SLOTS.includes(value as PartSlot)
 }
 
 export function isPartKey(value: unknown): value is string {
@@ -41,8 +45,8 @@ export function getPartIdSlot(value: unknown): PartSlot | null {
   return isPartSlot(key) ? key : null
 }
 
-export function getPartDefinitions(catalog: MechaCatalog): PartDefinition[] {
-  return catalog.list().flatMap((model) => model.stages.map((part) => ({
+export function getPartDefinitions(catalog: MechaCatalog, includeLegacy = false): PartDefinition[] {
+  return catalog.list().flatMap((model) => [...model.stages, ...(includeLegacy ? model.legacyParts ?? [] : [])].map((part) => ({
     id: getPartId(model.id, getStagePartKey(part)), mechaId: model.id, mechaName: model.name,
     stage: part.stage, slot: getStagePartSlot(part), name: part.name, asset: part.asset,
   })))
@@ -60,12 +64,18 @@ export function canUseWorkbench(phase: AppPhase): boolean {
   return phase === 'READY' || phase === 'COMPLETE'
 }
 
-export function isCompositionComplete(parts: DraftComposition, unlocked: readonly string[], catalog: MechaCatalog): parts is Composition {
-  const definitions = getPartDefinitions(catalog)
-  return PART_SLOTS.every((slot) => unlocked.includes(parts[slot] ?? '')
+export function getCompositionSlots(parts: DraftComposition): readonly PartSlot[] {
+  const body = parts.hips || parts['left-leg'] || parts['right-leg'] ? MODULAR_PART_SLOTS : PART_SLOTS
+  return parts.wings ? [...body, 'wings'] : body
+}
+
+export function isCompositionComplete(parts: DraftComposition, unlocked: readonly string[], catalog: MechaCatalog,
+  slots: readonly PartSlot[] = getCompositionSlots(parts)): parts is Composition {
+  const definitions = getPartDefinitions(catalog, true)
+  return slots.every((slot) => unlocked.includes(parts[slot] ?? '')
     && definitions.some((part) => part.id === parts[slot] && part.slot === slot))
 }
 
 export function equalComposition(a: DraftComposition, b: DraftComposition): boolean {
-  return PART_SLOTS.every((slot) => a[slot] === b[slot])
+  return ALL_PART_SLOTS.every((slot) => a[slot] === b[slot])
 }

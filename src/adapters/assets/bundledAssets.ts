@@ -6,6 +6,7 @@ const assets = import.meta.glob([
   '../../assets/mecha/*/stages/stage-06.png',
   '../../assets/mecha/*/final/*.png',
   '../../assets/mecha/*/break/*.png',
+  '../../assets/mecha/*/assembly/*.png',
 ], { eager: true, import: 'default', query: '?url' }) as Record<string, string>
 
 export const bundledAssets: AssetResolver = {

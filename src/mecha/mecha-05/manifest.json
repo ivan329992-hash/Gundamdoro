@@ -2,7 +2,7 @@
   "id": "mecha-05",
   "name": "MECHA-05",
   "description": "骨架近战型",
-  "totalStages": 5,
+  "totalStages": 7,
   "finalAsset": "final/assembled.png",
   "stages": [
     {
@@ -31,9 +31,35 @@
     },
     {
       "stage": 5,
+      "name": "HIP UNIT",
+      "asset": "assembly/master-front-v1.png",
+      "slot": "hips"
+    },
+    {
+      "stage": 6,
+      "name": "LEFT LEG",
+      "asset": "assembly/master-front-v1.png",
+      "slot": "left-leg"
+    },
+    {
+      "stage": 7,
+      "name": "RIGHT LEG",
+      "asset": "assembly/master-front-v1.png",
+      "slot": "right-leg"
+    }
+  ],
+  "legacyParts": [
+    {
+      "stage": 5,
       "name": "LEG UNIT",
       "asset": "parts/leg-unit.png",
-      "slot": "legs"
+      "slot": "legs",
+      "splitInto": [
+        "hips",
+        "left-leg",
+        "right-leg"
+      ],
+      "splitBeforeVersion": 7
     }
   ]
 }

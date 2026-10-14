@@ -1,21 +1,28 @@
 import { useId, useState } from 'react'
 import { getCompositionLayout, type PartLayout, type Point } from '../../adapters/assets/compositionLayout'
 import { getPartDefinitions, PART_SLOTS, PART_SLOT_LABELS } from '../../domain/inventory'
-import type { DraftComposition, PartSlot } from '../../domain/types'
-import { appDependencies } from '../../app/dependencies'
-import { getStageAsset } from '../../mecha/loader'
+import type { DraftComposition, LegacyPartSlot } from '../../domain/types'
+import { appAssets, appDependencies } from '../../app/dependencies'
+import { RegisteredMecha } from './RegisteredMecha'
+import { registeredAssemblyProfiles } from '../../adapters/assets/registeredAssembly'
 
-interface Placement { slot: PartSlot; src: string; layout: PartLayout; x: number; y: number; scale: number }
+interface Placement { slot: LegacyPartSlot; src: string; layout: PartLayout; x: number; y: number; scale: number }
 const point = (layout: PartLayout, relative: Point): Point => [layout.bounds[0] + relative[0] * layout.bounds[2], layout.bounds[1] + relative[1] * layout.bounds[3]]
 
-export function CompositeMecha({ parts, label = '自定义机体预览' }: { parts: DraftComposition; label?: string }) {
+export function CompositeMecha({ parts, label = '自定义机体预览', profile }: { parts: DraftComposition; label?: string; profile?: string }) {
+  if (profile && registeredAssemblyProfiles[profile]) return <RegisteredMecha parts={parts} label={label} config={registeredAssemblyProfiles[profile]} />
+  if (profile) return <p className="composition-error" role="status">该装配版本暂不可用，配方和制作记录已保留。</p>
+  return <LegacyCompositeMecha parts={parts} label={label} />
+}
+
+function LegacyCompositeMecha({ parts, label }: { parts: DraftComposition; label: string }) {
   const clipId = useId().replace(/:/g, '')
   const [failed, setFailed] = useState<string[]>([])
   const [retry, setRetry] = useState(0)
-  const definitions = getPartDefinitions(appDependencies.catalog)
+  const definitions = getPartDefinitions(appDependencies.catalog, true)
   const torso = definitions.find((part) => part.id === parts.torso)
   const torsoLayout = torso && getCompositionLayout(torso.mechaId, 'torso')
-  const targets: Record<PartSlot, Point> = { torso: [700, 530], head: [700, 350], 'left-arm': [870, 460], 'right-arm': [530, 460], legs: [700, 700] }
+  const targets: Record<LegacyPartSlot, Point> = { torso: [700, 530], head: [700, 350], 'left-arm': [870, 460], 'right-arm': [530, 460], legs: [700, 700] }
   let torsoScale = 1
   let torsoOrigin: Point = [0, 0]
   if (torsoLayout?.waist && torsoLayout.neck && torsoLayout.left && torsoLayout.right) {
@@ -32,7 +39,7 @@ export function CompositeMecha({ parts, label = '自定义机体预览' }: { par
   for (const slot of PART_SLOTS) {
     const part = definitions.find((part) => part.id === parts[slot] && part.slot === slot)
     const layout = part && getCompositionLayout(part.mechaId, slot)
-    const src = part && getStageAsset(part.stage, part.mechaId)
+    const src = part && appAssets.resolve(part.mechaId, part.asset)
     if (!part || !layout || !src) continue
     if (slot === 'torso') placements.push({ slot, src, layout, x: torsoOrigin[0], y: torsoOrigin[1], scale: torsoScale })
     else {

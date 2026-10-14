@@ -20,8 +20,8 @@ describe('stage image presentation', () => {
     expect(html).not.toContain('/final/')
   })
 
-  it('shows only wings during the independent sixth focus', () => {
-    const html = renderToStaticMarkup(<StageImage mechaId="wing-zero-ew" stage={6} className="focus-part-image" />)
+  it('shows only wings during the independent eighth focus', () => {
+    const html = renderToStaticMarkup(<StageImage mechaId="wing-zero-ew" stage={8} className="focus-part-image" />)
     expect(html).toContain('wings.png')
     expect(html).not.toContain('torso.png')
     expect(html.match(/<image /g)).toHaveLength(1)
@@ -37,10 +37,10 @@ describe('stage image presentation', () => {
     expect(getStagePresentation('missing-model', 1)).toBeNull()
   })
 
-  it('pauses custom assembly UI without deleting stored recipes', () => {
+  it('exposes the compatible assembly entry while retaining the inventory', () => {
     const html = renderToStaticMarkup(<InventoryScreen onClose={() => {}} onOpenHangar={() => {}} />)
     expect(html).toContain('配件仓库')
-    expect(html).not.toContain('自定义拼装')
+    expect(html).toContain('自定义拼装')
     expect(html).not.toContain('随机搭配')
   })
 })

@@ -51,7 +51,7 @@ describe('permanent component inventory and custom builds', () => {
     const restored = createAppStore(fake.dependencies)
     await initializeAppStore(restored)
     expect(restored.getState().unlockedParts).toEqual(store.getState().unlockedParts)
-    expect(JSON.parse(fake.values.get(APP_STORAGE_KEY)!).version).toBe(5)
+    expect(JSON.parse(fake.values.get(APP_STORAGE_KEY)!).version).toBe(8)
   })
 
   it('rejects locked components, wrong slots, partial recipes and blank names', () => {

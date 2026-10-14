@@ -2,7 +2,7 @@
   "id": "mecha-01",
   "name": "MECHA-01",
   "description": "通用工程型",
-  "totalStages": 5,
+  "totalStages": 7,
   "finalAsset": "stages/stage-06.png",
   "stages": [
     {
@@ -31,9 +31,22 @@
     },
     {
       "stage": 5,
-      "name": "LEG UNIT",
-      "asset": "parts/leg-unit.png",
-      "slot": "legs"
+      "name": "HIP UNIT",
+      "asset": "assembly/master-front-v1.png",
+      "slot": "hips"
+    },
+    {
+      "stage": 6,
+      "name": "LEFT LEG",
+      "asset": "assembly/master-front-v1.png",
+      "slot": "left-leg"
+    },
+    {
+      "stage": 7,
+      "name": "RIGHT LEG",
+      "asset": "assembly/master-front-v1.png",
+      "slot": "right-leg"
     }
-  ]
+  ],
+  "legacyParts": [{ "stage": 5, "name": "LEG UNIT", "asset": "parts/leg-unit.png", "slot": "legs", "splitInto": ["hips", "left-leg", "right-leg"] }]
 }

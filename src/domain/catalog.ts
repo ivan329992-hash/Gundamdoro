@@ -38,9 +38,17 @@ function loadManifest(value: unknown): MechaManifest {
     throw new Error('Mecha part slots must be unique')
   }
   if (new Set(stages.map(getStagePartKey)).size !== totalStages) throw new Error('Mecha part IDs must be unique')
+  const legacyParts = manifest.legacyParts
+  if (legacyParts !== undefined && (!Array.isArray(legacyParts) || legacyParts.some((part) => !isMechaStage(part) || part.stage < 1 || part.stage > totalStages
+    || (part.splitBeforeVersion !== undefined && (!Number.isInteger(part.splitBeforeVersion) || part.splitBeforeVersion < 1))
+    || !Array.isArray(part.splitInto) || part.splitInto.length < 2 || new Set(part.splitInto).size !== part.splitInto.length
+    || !part.splitInto.every((key) => stages.some((stage) => getStagePartKey(stage) === key))
+    || stages.some((stage) => getStagePartKey(stage) === getStagePartKey(part)))
+    || new Set(legacyParts.map(getStagePartKey)).size !== legacyParts.length)) throw new Error('Invalid legacy component mapping')
   return {
     id: manifest.id, name: manifest.name, totalStages, stages: stages.sort((a, b) => a.stage - b.stage), finalAsset: manifest.finalAsset,
     ...(typeof manifest.description === 'string' && manifest.description.trim() ? { description: manifest.description } : {}),
+    ...(legacyParts ? { legacyParts } : {}),
   }
 }
 

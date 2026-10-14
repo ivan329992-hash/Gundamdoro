@@ -5,14 +5,14 @@ import { createFakeApp } from '../test/fakeApp'
 import { createAppStore, initializeAppStore } from './createAppStore'
 
 describe('storage adapter contract', () => {
-  it('writes a version-5 envelope and excludes actions and platform dependencies', () => {
+  it('writes a version-8 envelope and excludes actions and platform dependencies', () => {
     const fake = createFakeApp()
     const store = createAppStore(fake.dependencies)
     store.getState().startFocus()
     const saved = JSON.parse(fake.values.get(APP_STORAGE_KEY)!)
     expect(APP_STORAGE_KEY).toBe('gundamdoro-app-state')
     expect(saved.version).toBe(APP_STORAGE_VERSION)
-    expect(saved.version).toBe(5)
+    expect(saved.version).toBe(8)
     expect(Object.keys(saved.state).sort()).toEqual(Object.keys(createDefaultData(fake.dependencies)).sort())
     expect(saved.state.startFocus).toBeUndefined()
     expect(saved.state.runtime).toBeUndefined()

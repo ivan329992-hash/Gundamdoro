@@ -1,0 +1,7 @@
+{
+  "registeredStages": {
+    "5": { "profile": "standard-front-v2", "slot": "hips" },
+    "6": { "profile": "standard-front-v2", "slot": "left-leg" },
+    "7": { "profile": "standard-front-v2", "slot": "right-leg" }
+  }
+}

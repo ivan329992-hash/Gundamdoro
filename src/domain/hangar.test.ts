@@ -7,6 +7,12 @@ const build = (id: string, mechaId = 'mecha-01', completedAt: number | null = 10
 })
 
 describe('hangar model summaries', () => {
+  it('keeps distinct rendering profiles separate without changing saved recipes', () => {
+    const composition = Object.fromEntries(['torso', 'head', 'left-arm', 'right-arm', 'legs'].map((slot) => [slot, `mecha-01:${slot}`])) as NonNullable<BuiltMecha['composition']>
+    const legacy: BuiltMecha = { ...build('old'), kind: 'custom', composition }
+    const current = { ...legacy, id: 'new', assemblyProfile: 'standard-front-v1' }
+    expect(groupHangar([legacy, current, { ...current, id: 'second' }]).map((group) => group.count)).toEqual([1, 2])
+  })
   it('returns no groups for an empty hangar', () => expect(groupHangar([])).toEqual([]))
   it('groups fixed models without changing history and sums actual statistics', () => {
     const records = [build('a'), build('b', 'mecha-01', 200), build('c', 'mecha-02', 300)]

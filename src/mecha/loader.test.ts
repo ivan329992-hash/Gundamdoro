@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { findMechaManifest, getBreakAsset, getFinalAsset, getMechaManifest, getMechaManifests, getNextStageDefinition, getStageAsset } from './loader'
 
 describe('collectible mecha assets', () => {
-  it('loads five separate part images and a distinct final mecha image', () => {
+  it('loads seven part definitions with masked lower-body sources and a distinct final image', () => {
     const manifest = getMechaManifest()
     const parts = manifest.stages.map((part) => getStageAsset(part.stage))
-    expect(manifest.totalStages).toBe(5)
+    expect(manifest.totalStages).toBe(7)
     expect(parts.every(Boolean)).toBe(true)
     expect(new Set(parts).size).toBe(5)
     expect(getFinalAsset()).toBeTruthy()
@@ -13,10 +13,12 @@ describe('collectible mecha assets', () => {
     expect(getFinalAsset()).toContain('stage-06')
   })
 
-  it('finishes the collection at the leg unit with no sixth focus part', () => {
-    expect(getNextStageDefinition(4)?.name).toBe('LEG UNIT')
-    expect(getNextStageDefinition(5)).toBeNull()
-    expect(getStageAsset(6)).toBeNull()
+  it('collects hips and each leg independently and finishes at the seventh part', () => {
+    expect(getNextStageDefinition(4)?.name).toBe('HIP UNIT')
+    expect(getNextStageDefinition(5)?.name).toBe('LEFT LEG')
+    expect(getNextStageDefinition(6)?.name).toBe('RIGHT LEG')
+    expect(getNextStageDefinition(7)).toBeNull()
+    expect(getStageAsset(8)).toBeNull()
   })
 
   it('does not select a part asset for invalid counts', () => {
@@ -41,27 +43,30 @@ describe('collectible mecha assets', () => {
       ...model.stages.map((part) => getStageAsset(part.stage, model.id)),
     ])
     expect(images.every(Boolean)).toBe(true)
-    expect(new Set(images).size).toBe(models.reduce((count, model) => count + model.stages.length + 1, 0))
+    const sourcesByModel = models.map((model) => new Set([getFinalAsset(model.id), ...model.stages.map((part) => getStageAsset(part.stage, model.id))]))
+    for (let index = 0; index < sourcesByModel.length; index++) for (const image of sourcesByModel[index]) {
+      expect(sourcesByModel.every((other, otherIndex) => otherIndex === index || !other.has(image))).toBe(true)
+    }
     for (const model of models) {
       expect(model.totalStages).toBe(model.stages.length)
       expect(getNextStageDefinition(model.totalStages, model.id)).toBeNull()
       expect(getBreakAsset(model.id)).toBe(getBreakAsset('mecha-01'))
     }
-    expect(getNextStageDefinition(4, 'mecha-02')?.name).toBe('LEG UNIT')
-    expect(getNextStageDefinition(5, 'mecha-02')).toBeNull()
+    expect(getNextStageDefinition(4, 'mecha-02')?.name).toBe('HIP UNIT')
+    expect(getNextStageDefinition(7, 'mecha-02')).toBeNull()
     expect(getBreakAsset('mecha-02')).toBe(getBreakAsset('mecha-01'))
     expect(getStageAsset(1, 'unregistered-model')).toBeNull()
   })
 
-  it('uses the cleaned fan-art head and collects wings as a sixth independent part', () => {
+  it('uses the cleaned fan-art head and collects wings as an eighth independent part', () => {
     const model = getMechaManifest('wing-zero-ew')
     expect(model.name).toBe('飞翼零式 EW')
     expect(model.stages[0].name).toBe('TORSO')
-    expect(model.totalStages).toBe(6)
+    expect(model.totalStages).toBe(8)
     expect(getStageAsset(2, model.id)).toContain('head-clean-v3.png')
     expect(getFinalAsset(model.id)).toContain('assembled-decals-v2.png')
-    expect(getNextStageDefinition(5, model.id)?.name).toBe('WINGS')
-    expect(getStageAsset(6, model.id)).toContain('wings.png')
-    expect(getNextStageDefinition(6, model.id)).toBeNull()
+    expect(getNextStageDefinition(7, model.id)?.name).toBe('WINGS')
+    expect(getStageAsset(8, model.id)).toContain('wings.png')
+    expect(getNextStageDefinition(8, model.id)).toBeNull()
   })
 })

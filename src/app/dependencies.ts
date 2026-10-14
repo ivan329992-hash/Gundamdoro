@@ -4,11 +4,13 @@ import { bundledCatalog } from '../adapters/catalog/bundledCatalog'
 import { browserRuntime, browserScheduler } from '../adapters/platform/browser'
 import { getBrowserStorage } from '../adapters/storage/browserStorage'
 import type { AppDependencies } from '../application/ports'
+import { registeredAssemblyPolicy } from '../adapters/assets/registeredAssembly'
 
 export const appDependencies: AppDependencies = {
   catalog: bundledCatalog,
   runtime: browserRuntime,
   storage: getBrowserStorage,
+  assembly: registeredAssemblyPolicy,
 }
 
 export const appAssets = bundledAssets
