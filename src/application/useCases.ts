@@ -55,10 +55,6 @@ export function createAppUseCases(dependencies: AppDependencies) {
       : { ...state, phase: 'BREAK', timer: createRunningTimer(durationMs(state.settings.breakMinutes), now, null) }
   }
 
-  function startBreak(state: AppData, now = runtime.now()): AppData {
-    return state.phase === 'PART_REWARD' && !isCollectionComplete(state.assembly) ? finishPartReveal(state, now) : state
-  }
-
   function completeBreak(state: AppData, now = runtime.now()): AppData {
     if (state.phase !== 'BREAK' || state.timer.status !== 'running'
       || state.timer.endAt === null || state.timer.endAt > now) return state
@@ -127,7 +123,7 @@ export function createAppUseCases(dependencies: AppDependencies) {
 
   return {
     selectMecha, startFocus, completeFocus, pauseTimer, resumeTimer,
-    cancelTimer, abandonBuild, finishPartReveal, startBreak, completeBreak, endBreak, startAssembly,
+    cancelTimer, abandonBuild, finishPartReveal, completeBreak, endBreak, startAssembly,
     finishAssemblyAnimation, resetMecha, updateSettings, syncTimer, recoverState: syncTimer,
   }
 }

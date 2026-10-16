@@ -1,8 +1,10 @@
 /** 【视图·非相位】选机型；真正切换走 selectMecha（有 canSelectMecha 门禁）。 */
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getFinalAsset, getMechaManifests } from '../../mecha/loader'
 import { AssetImage } from './AssetImage'
 import { useAppStore } from '../../store/useAppStore'
+import { ModelImportScreen } from './ModelImportScreen'
+import { isUserModelId } from '../../domain/userModels'
 
 interface ModelSelectionScreenProps {
   currentMechaId: string
@@ -13,16 +15,22 @@ interface ModelSelectionScreenProps {
 
 export function ModelSelectionScreen({ currentMechaId, completed, onSelect, onClose }: ModelSelectionScreenProps) {
   const backButton = useRef<HTMLButtonElement>(null)
+  const addButton = useRef<HTMLButtonElement>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importedId, setImportedId] = useState<string | null>(null)
   const models = getMechaManifests()
   const hangar = useAppStore((state) => state.hangar)
   const revealedModels = new Set(hangar.filter((entry) => entry.kind !== 'custom').map((entry) => entry.mechaId))
 
   useEffect(() => {
+    if (importOpen) return
     backButton.current?.focus()
     const handleKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [onClose])
+  }, [onClose, importOpen])
+
+  if (importOpen) return <ModelImportScreen onClose={() => { setImportOpen(false); window.setTimeout(() => addButton.current?.focus(), 0) }} onImported={(id) => { setImportedId(id); setImportOpen(false) }} />
 
   return (
     <main className="model-screen">
@@ -35,6 +43,8 @@ export function ModelSelectionScreen({ currentMechaId, completed, onSelect, onCl
           <button ref={backButton} type="button" className="secondary-button model-back" onClick={onClose}>返回</button>
         </header>
         <p className="model-note">首次完成制作后，揭晓机体的完整外观。更换未完成的机体需先确认放弃本轮制作，永久库存会保留。</p>
+        <button ref={addButton} type="button" className="secondary-button model-add" onClick={() => setImportOpen(true)}>添加我的机型</button>
+        {importedId && <p className="model-import-success" role="status">“{models.find((model) => model.id === importedId)?.name}”已添加。选择制作后，通过专注收集配件。</p>}
         <ul className="model-grid" aria-label="可制作机型">
           {models.map((model) => {
             const selected = model.id === currentMechaId
@@ -47,6 +57,7 @@ export function ModelSelectionScreen({ currentMechaId, completed, onSelect, onCl
                 </div>
                 <h2>{model.name}</h2>
                 {model.description && <p>{model.description}</p>}
+                {isUserModelId(model.id) && <p className="model-user-label">用户导入 · 仅收集，暂不参与混搭</p>}
                 <p>{model.totalStages} 个部件 · {model.totalStages} 次专注</p>
                 <p className="model-reveal-note">{mystery ? '完成制作，揭晓完整外观' : '外观已揭晓'}</p>
                 <button

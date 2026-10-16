@@ -1,5 +1,6 @@
 /** 【领域·字典】全应用共享类型：相位、机甲清单、机库记录、AppData/AppActions。先读这个文件。 */
 import type { TimerState } from './timer'
+import type { UserModelDraft } from './userModels'
 
 export type AppPhase = 'READY' | 'FOCUS' | 'PART_REWARD' | 'ASSEMBLY' | 'BREAK' | 'COMPLETE'
 
@@ -84,6 +85,7 @@ export interface AppData {
 }
 
 export interface AppActions {
+  importModel: (draft: UserModelDraft) => Promise<string>
   selectMecha: (mechaId: string) => void
   startFocus: (now?: number) => void
   pauseTimer: (now?: number) => void
@@ -91,7 +93,6 @@ export interface AppActions {
   cancelTimer: () => void
   abandonBuild: () => void
   completeFocus: (sessionId: string, now?: number) => void
-  startBreak: (now?: number) => void
   completeBreak: (now?: number) => void
   endBreak: () => void
   finishPartReveal: (now?: number) => void

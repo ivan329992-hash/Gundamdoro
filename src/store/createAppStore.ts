@@ -7,14 +7,19 @@ import { createDefaultData } from '../application/state'
 import { createAppUseCases } from '../application/useCases'
 import type { AppData, AppState } from '../domain/types'
 import { createWorkbenchUseCases } from '../application/workbench'
+import { importUserModel } from '../application/importModel'
+import type { UserModelLibrary } from '../application/ports'
+
+const libraries = new WeakMap<object, UserModelLibrary>()
 
 export function createAppStore(dependencies: AppDependencies) {
   const useCases = createAppUseCases(dependencies)
   const codec = createSnapshotCodec(dependencies)
   const workbench = createWorkbenchUseCases(dependencies)
-  return create<AppState>()(persist<AppState, [], [], AppData>(
-    (set) => ({
+  const store = create<AppState>()(persist<AppState, [], [], AppData>(
+    (set, get) => ({
       ...createDefaultData(dependencies),
+      importModel: (draft) => importUserModel(draft, get().phase, dependencies),
       selectMecha: (mechaId) => set((state) => useCases.selectMecha(state, mechaId)),
       startFocus: (now) => set((state) => useCases.startFocus(state, now)),
       pauseTimer: (now) => set((state) => useCases.pauseTimer(state, now)),
@@ -22,7 +27,6 @@ export function createAppStore(dependencies: AppDependencies) {
       cancelTimer: () => set((state) => useCases.cancelTimer(state)),
       abandonBuild: () => set((state) => useCases.abandonBuild(state)),
       completeFocus: (id, now) => set((state) => useCases.completeFocus(state, id, now)),
-      startBreak: (now) => set((state) => useCases.startBreak(state, now)),
       completeBreak: (now) => set((state) => useCases.completeBreak(state, now)),
       endBreak: () => set((state) => useCases.endBreak(state)),
       finishPartReveal: (now) => set((state) => useCases.finishPartReveal(state, now)),
@@ -53,9 +57,12 @@ export function createAppStore(dependencies: AppDependencies) {
       skipHydration: true,
     },
   ))
+  if (dependencies.models) libraries.set(store, dependencies.models)
+  return store
 }
 
 export async function initializeAppStore(store: ReturnType<typeof createAppStore>): Promise<void> {
+  await libraries.get(store)?.load()
   if (!store.persist) throw new Error('Local storage is unavailable')
   if (!store.persist.hasHydrated()) await store.persist.rehydrate()
   if (!store.persist.hasHydrated()) throw new Error('Could not load the saved app state')

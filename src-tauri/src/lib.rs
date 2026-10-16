@@ -1,8 +1,10 @@
 use tauri::Manager;
+mod user_models;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![user_models::load_user_models, user_models::save_user_model])
         .plugin(tauri_plugin_notification::init())
         .on_window_event(|window, event| {
             if window.label() == "main"

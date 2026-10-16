@@ -1,91 +1,277 @@
 # Gundamdoro
 
-A desktop Pomodoro timer where focused work collects mecha parts for a final build.
+把专注时间变成可收集的机甲配件。
 
-## MVP idea
+Gundamdoro 是一款 Windows 桌面番茄钟：每完成一次专注，解锁一个独立配件；集齐当前机型后，由用户点击完成最终拼装。已解锁配件还可以跨机型混搭，命名后保存到机体仓库。
 
-Each focus session unlocks one detached part in a separate collection slot. The selected model's collectible list determines the number of sessions. All reveals except the last lead to a break, which can be ended early; the last returns to the collection screen. Once all parts are collected, click Assemble without an extra focus session.
+当前版本为 v0.1 MVP 及已批准的扩展，支持浏览器开发预览和本地用户机型导入。运行数据与素材均保存在本地，不需要账号、后端或数据库；暂不提供云同步、移动端或 3D 渲染。
 
-Core loop:
+## 功能与使用流程
+
+- **专注计时**：默认专注 25 分钟、休息 5 分钟；支持 15/25/45 分钟快捷选择、自定义时长、暂停/继续和预计结束时间。
+- **收集与拼装**：每次完成专注只收集一个配件，非最后一个配件展示后进入休息；集齐后手动拼装，成品自动入库。
+- **永久配件与自定义机体**：解锁不消耗、不叠加数量；七个必选身体槽位可跨机型搭配，并可选装已拥有的飞翼零式翅膀。
+- **机体仓库与档案**：相同固定机型按一张卡片展示，保留每次完成记录；详情提供机体故事、设计设定和个人累计记录。
+- **桌面与存档**：支持最小化后的桌面迷你计时器、完成提示音、可选系统通知，以及本地存档和重启恢复。
+
+主流程：
 
 ```text
-READY -> FOCUS -> PART_REWARD -> BREAK -> READY (parts 1 through N-1)
-                            \-> READY (part N)
-READY (N / N) -> click Assemble -> ASSEMBLY -> COMPLETE
+READY → FOCUS → PART_REWARD
+                    ├─ 尚有配件 → BREAK → READY
+                    └─ 已集齐   → READY → 点击拼装 → ASSEMBLY → COMPLETE
 ```
 
-Finished builds are automatically archived in the local hangar. Open `仓库` from READY or COMPLETE: repeated builds of one model share one card showing completion count, while every original record stays saved. Custom cards omit the component-origin list; the recipe remains available in the dossier. Click the card or `查看机体档案` for a mecha-style dossier with full-model art, role, component count, story, design features and cumulative personal statistics. Capability indices are fictional display settings, not official performance; Wing Zero EW content is explicitly unofficial application-only interpretation. Escape returns to the hangar first, then closes it. Unknown models and historical dates retain honest unavailable/unknown labels. Build Again preserves all archived models.
+休息结束不会自动开始下一次专注，提前点击“结束休息”也不会影响已收集配件。固定机体最终拼装和自定义保存均不会额外增加专注次数或分钟数。
 
-Uncompleted models appear in selection as a flat silhouette with a centered question mark. Completing and archiving that fixed model reveals its full preview permanently, including after restart/Build Again. Custom mixed builds do not reveal their source models. No additional unlock flag or storage migration is needed.
+“取消本次”只停止当前专注、保留本轮收集进度；“放弃制作”确认后清空本轮进度并允许重新选型，但保留永久配件、成品仓库、设置和自定义草稿。“BUILD AGAIN”开始同机型的新一轮收集，历史成品不受影响。
 
-Click `选择机型` before collecting the first part, or after completing a build, to choose MECHA-01 through MECHA-06 or `飞翼零式 EW`. Each model's part list determines its focus count: all six original models have seven body parts (torso, head, arms, hips, left leg, right leg), and Wing Zero EW has those seven plus its independent wings (eight focuses). To change an unfinished build, click `放弃制作` during focus, `放弃制作并换机型` during break, or `放弃并换机型` in READY and confirm. This clears only current-build progress/statistics and opens model selection; permanent inventory, hangar, settings and drafts survive. Confirmation pauses running focus; cancel/Escape resumes it, while an already paused timer stays paused. `取消本次` only cancels one session and retains collection progress. `BUILD AGAIN` repeats the selected model.
+未完成机型在选择页显示轮廓与问号；完成该固定机型并入库后，才揭示完整预览。拥有配件或保存混搭机体不会提前揭示来源机型。
 
-The additional original designs are MECHA-03 (重装突击型), MECHA-04 (羽翼巡航型), MECHA-05 (骨架近战型) and MECHA-06 (高速突击型). Backpack, wings and torso-mounted equipment belong to the torso collectible. See [design directions and prompts](docs/design-four-models.md) and [refinement prompts](docs/design-four-models-resume.md).
+### 内置机型
 
-Open `配件仓库` from READY or COMPLETE to inspect permanently unlocked components. Each completed focus unlocks that model's matching component once; components survive BUILD AGAIN/model changes. Filter by model or inspect locked components to see how to earn them.
+| 模型 ID | 名称 / 设计方向 | 新一轮所需专注次数 |
+| --- | --- | --- |
+| `mecha-01` | MECHA-01 / 通用工程型 | 7 |
+| `mecha-02` | MECHA-02 / 轻装机动型 | 7 |
+| `mecha-03` | MECHA-03 / 重装突击型 | 7 |
+| `mecha-04` | MECHA-04 / 羽翼巡航型 | 7 |
+| `mecha-05` | MECHA-05 / 骨架近战型 | 7 |
+| `mecha-06` | MECHA-06 / 高速突击型 | 7 |
+| `wing-zero-ew` | 飞翼零式 EW / 非官方生成同人素材 | 8 |
 
-Open `配件仓库与拼装` → `自定义拼装` to mix permanently unlocked body components from all seven models. Seven required body slots share a calibrated frame, plus an optional 背包／翅膀 slot. Equip owned Wing Zero EW wings on any body, or choose 不装备背包／翅膀. Preparation leaves it empty; randomization includes both empty and owned choices. Hips, left leg and right leg can each come from a different model. Choose parts, name the result, then save it to the hangar without consuming parts or adding focus credit. Each selected component must already be owned. Unsupported old draft selections stay saved and must be explicitly replaced; legacy archived compositions retain their original rendering.
+七个身体配件按躯干、头部、左臂、右臂、腰胯、左腿、右腿依次收集；飞翼零式第八次收集独立翅膀。次数由模型清单的 `stages.length` 决定，整机图和备用素材不计入。
 
-Assembly uses separate registered front-view masters, deterministic polygon masks and semantic joint/limb calibration. The first four collectible images and fixed-model final artwork are unchanged; the three lower-body collectibles use masked views of the registered masters. New custom records capture `assemblyProfile: standard-front-v4` inside version 8 so future artwork changes do not silently reinterpret old recipes. See [initial artwork prompts](docs/assembly-artwork.md) and [all-model artwork, saved paths and prompts](docs/assembly-artwork-all-models.md).
+### 自定义拼装
 
-For development-only visual calibration, open `http://localhost:1420/?assembly-lab=1`. The independent lab shows 56 representative seven-model samples, or all 128 combinations of a selected model pair in four groups without reading/writing real progress or unlocks. Select a model, slot and mask/segment/joint point; click/drag on the master or enter coordinates, then export the resolved `registered-assembly-v4.json`. Optional wing sample controls do not grant ownership. Review exports through the normal code-review/check workflow; edit current backpack calibration in `src/adapters/assets/registered-backpack.json` and preserve archived profiles. The lab is excluded from production and does not grant test components in the application.
+在 READY 或 COMPLETE 打开“配件仓库与拼装”，切换到“自定义拼装”。选择已拥有的配件，填写名称，再点击底部固定栏中的“保存到成品仓库”；也可以随机搭配。
 
-`飞翼零式 EW` is user-supplied generated unofficial fan art, included at the user's explicit request. Its eight rewards are torso, cleaned head, left arm, right arm, hips, left leg, right leg and wings. Wings are collected separately on the eighth focus; old earned paired legs migrate to the three lower-body parts. Final assembly uses the provided whole-model PNG. See [asset provenance and boundaries](src/assets/mecha/wing-zero-ew/ASSETS.md). It is not official or licensed artwork, and the code license does not grant character/commercial-use rights.
+七个身体槽位必须齐全，背包／翅膀可为空；当前独立可选背包只有 `wing-zero-ew:wings`，未解锁时不能装备。部分机型的紧凑背包或武装仍随躯干移动，不是独立槽位配件。
 
-See the [Wing Zero EW integration acceptance record](docs/qa-wing-zero-ew.md) for regression and browser checks.
+保存不消耗配件，同一草稿重复保存不会重复入库；修改名称或配方后生成新的草稿身份。自定义卡片只显示成品与摘要，完整配件来源保留在详情中。
 
-Current model-specific focus-count behavior and compatibility checks are recorded in [variable component count QA](docs/qa-variable-part-counts.md).
+### 添加自己的机型
 
-For all seven models, older earned paired legs unlock hips and both legs while retaining the historical ID. Old completed builds keep their actual historical session statistics. An unfinished fifth focus keeps its timer and collects hips only; two more focuses collect the legs. Old drafts are expanded with a new draft identity, while archived v1/profile-less recipes keep their original appearance. See [all-model assembly acceptance](docs/qa-all-model-assembly.md).
+从“选择机型”进入“添加我的机型”，填写名称、可选简介，上传整机图与各个独立配件图。可调整配件顺序或移除尚未保存的配件；1–32 个配件对应 1–32 次专注，整机图不占用一次专注。
 
-Optional backpack acceptance is recorded in [backpack/wings QA](docs/qa-optional-backpack.md). Saving or unequipping changes only the draft/recipe; wing inventory and focus counts stay unchanged. Equipped and unequipped variants have separate hangar groups. MECHA-03/04/06 torso-integrated equipment is not separately selectable.
+支持 PNG/JPEG/WebP，独立配件推荐透明背景；单图限制 8 MiB、1600 万像素，整套限制 64 MiB。保存后返回选择页，需手动选择制作；导入本身不会解锁配件或保存成品。
 
-In the custom assembly tab, 保存到成品仓库 and 随机搭配 stay fixed at the bottom while browsing parts. The bar explains missing required parts or a blank name. After saving, use 查看成品仓库 in the same bar; it does not appear in inventory-only or hangar views.
+Windows 将素材复制到应用本地数据目录下的 `user-models/`，移动原始图片不会影响导入结果；浏览器预览使用 OPFS 私有文件存储，需要支持该能力的浏览器。素材与机型清单独立保存，进度快照仍使用版本 8，不把大图塞进 localStorage。启动先加载用户机型资源，再恢复进度；资源库读取失败时显示重试，不覆盖存档。
 
-## Planned stack
+第一步导入的机型仅支持收集与整机展示，不参与跨机型混搭；目前不提供保存后的机型修改、删除或素材包导出。整机图圈选分件、挂点与比例校准属于后续两步。用户导入的个人素材不会自动加入项目源码或上传到 Git。
 
-- Tauri v2
-- React
-- TypeScript
-- Vite
-- Zustand + persist
-- Framer Motion
+## 技术栈
 
-Development requirements are defined in [SPEC.md](./SPEC.md). Codex instructions are defined in [AGENTS.md](./AGENTS.md).
+| 部分 | 实现 |
+| --- | --- |
+| 界面与语言 | React 19、TypeScript 5 |
+| 开发、构建与测试 | Vite 7、Vitest 5 |
+| 业务状态与存档 | Zustand 5、Persist、localStorage |
+| 动画与拼装展示 | Framer Motion、PNG 素材、SVG 遮罩与二维变换 |
+| Windows 桌面 | Tauri 2、Rust、系统通知插件 |
 
-> MVP scope with approved extensions: Windows desktop, local-only, six original built-in mecha plus one user-supplied unofficial fan-art model, model-specific collectible counts and manual assembly, no backend, no accounts, no cloud sync.
+没有 React Router；主界面由业务阶段和临时视图状态驱动。Rust 只承担桌面集成，计时、收集、仓库与拼装规则主要由 TypeScript 实现。
 
-## Development
+## 快速运行
 
-```bash
-npm install
+### 浏览器开发预览
+
+准备 Node.js 24.x 和 npm；也支持 22.12+ 的 Node.js 22.x。当前 Vitest 5 的版本要求高于单独运行 Vite 的最低要求，依赖安装以仓库锁文件为准。
+
+```powershell
+git clone https://github.com/ivan329992-hash/Gundamdoro.git
+cd Gundamdoro
+npm ci
 npm run dev
-npm run build
+```
+
+打开 [http://localhost:1420/](http://localhost:1420/)。开发服务器支持热更新，修改前端后无需重新安装桌面程序；端口固定为 1420，已被占用时会直接报错。
+
+浏览器可测试计时、收集、仓库与自定义拼装；“迷你计时预览”只是在网页内显示组件，不能悬浮在其他桌面应用之上。网页与 Tauri 的本地存储彼此独立，也没有跨端同步。
+
+### Windows 桌面开发
+
+除前端依赖外，需要 Rust stable 的 MSVC 工具链、Visual C++ Build Tools 的 C++ 桌面开发组件与 Windows SDK，以及 WebView2 Runtime。
+
+```powershell
 npx tauri dev
 ```
 
-Use `npm test` for the timer/store regression suite. Browser preview at `http://localhost:1420/` updates while editing. In BREAK, click `结束休息`; after collecting all parts, click `开始拼装`.
+Tauri 会自动启动 Vite，不要同时在另一个终端重复运行 `npm run dev` 占用 1420 端口。若 Rust 构建找不到链接器或系统库，检查 C++/SDK 安装，并从 Visual Studio 的 Developer PowerShell 启动。
 
-READY now offers 15/25/45-minute shortcuts; settings still accept custom durations. The timer displays estimated local finish time, or a paused message until resumed. Settings also control completion sound, system notifications (off until explicitly enabled/permitted), and the desktop mini timer (on by default).
+主窗口默认 480 × 720，最小 420 × 640。启用迷你计时器后，最小化主窗口会显示可拖动、置顶的小窗口；可暂停/继续、隐藏或恢复主窗口，关闭主窗口则退出整个应用。
 
-In the Windows app, minimize via the title bar or `最小化`: a draggable, always-on-top mini timer remains visible, with pause/resume, hide and return-to-main controls. Closing the main app exits both windows; minimizing does not stop the timer. The mini is a read-only state mirror, so it cannot duplicate collections or overwrite saves. In a browser, `迷你计时预览` displays an in-page overlay only, not a desktop widget. Windows notifications should be verified with the installed app and may be suppressed by system notification/quiet-mode settings. Audio is unlocked by interaction and may be unavailable before the first click. No reminders run while the entire app is closed.
+### 测试与打包
 
-Stored version-0 progress is migrated automatically to the current model-specific workflow; settings and actual focus history are preserved.
+```powershell
+npm test
+npm run build
+npx tauri build --bundles msi
+```
 
-Persistence version 2 also migrates version-1 state. An existing completed model is imported into the hangar once, with its completion time marked unknown if it was never recorded. Current collection progress remains independent of the hangar.
+`npm test` 运行逻辑、存档、模块边界、资源及组件回归测试；`npm run build` 先执行 TypeScript 项目检查，再生成 `dist/`。Windows MSI 默认输出到 `src-tauri/target/release/bundle/msi/`；不指定 `--bundles msi` 时按 Tauri 配置构建所有配置的安装包类型。
 
-Current saves use version 8 and migrate versions 0/1/2/3/4/5/6/7 without changing the storage key or original fields. Inventory now accepts stable IDs for additional component types such as wings. Partial older progress retains its first four parts and actual focus history; earned paired legs expand to three lower-body parts. A pending old wing focus still targets wings after migration. Legacy completed/in-assembly models stay completed/accepted without inventing sessions or minutes; historical archive statistics remain unchanged. Migration recovers components from collected progress and known completed fixed models; absent history cannot be reconstructed. Custom recipes do not grant ownership. An unavailable active model stops startup without overwriting the save. Unknown valid part IDs are preserved with resource-unavailable feedback.
+只检查类型可运行 `npx tsc -b`。构建后的网页可用 `npm run preview` 预览，具体地址以终端输出为准。
 
-See the [initial multiple-model acceptance record](docs/qa-multiple-models.md), [four additional models acceptance record](docs/qa-four-additional-models.md), [inventory and custom assembly acceptance record](docs/qa-inventory-custom-assembly.md) and [MECHA-02 asset prompts/provenance](src/assets/mecha/mecha-02/ASSETS.md).
+## 开发调试入口
 
-If startup cannot read or parse the local save, the save comes from a newer app, or startup recovery cannot write, a retry screen is shown instead of entering the app. Check storage permissions and the app version, then click `重新读取存档`. Failed reads do not reset or overwrite the original save; do not clear application data to dismiss this error. Invalid fields in readable saves are still normalized automatically.
+| 地址 | 用途 | 限制 |
+| --- | --- | --- |
+| `http://localhost:1420/` | 正常分钟制预览 | 使用当前网页的本地存档 |
+| `http://localhost:1420/?fast=1` | 计时加速：配置的 1 分钟按 1 秒运行 | 仅开发模式；不会自动解锁配件 |
+| `http://localhost:1420/?assembly-lab=1` | 拼装校准实验室 | 独立样例，不读取或写入业务存档 |
 
-The model registry discovers `src/mecha/<model-id>/manifest.json`; every valid registered model appears in the selection screen. The `stages` list is the source of truth for the focus count; runtime `totalStages` is derived from its length (legacy declarations are ignored). Number stages consecutively from 1. Each stage defines one collectible; the final image and unused/alternate asset files do not count. Use a stable model-local `partId` for additional components, e.g. `wings` or `rifle`, independent of the custom-mixing slots. Preserve existing component IDs and stage order when extending a released model. Add local images under `parts/` and the full image under `final/` referenced by `finalAsset`. A model-specific `break/break-01.png` is optional. Do not remove or rename IDs referenced by saves.
+快速模式下 15/25/45 分钟实际对应 15/25/45 秒；预计结束时间目前只显示时、分，因此切换时可能仍显示同一分钟，这不代表倒计时没有更新。正常与快速预览共用当前 origin 的存档，建议用独立浏览器配置文件进行加速测试；已开始的计时保留启动时捕获的时长。
 
-The production Windows bundle is generated with `npx tauri build`. For local timer verification only, append `?fast=1` to the Vite URL; this converts configured minutes to seconds in development mode and is disabled in production builds.
+校准实验室提供 56 个代表性混搭样例，以及所选两机型的全部 128 种身体组合（分页显示）。支持遮罩、语义线段和关节点编辑，并导出解析后的布局 JSON；导出不会自动替换项目文件，也不会给真实库存发放配件。
 
-## Architecture
+两个调试入口在生产构建中均不启用，校准实验室代码不进入生产入口。
 
-Business rules are separated into `src/domain/` and `src/application/`; Zustand remains the state facade in `src/store/`. Runtime, storage, catalog and asset implementations are bound in `src/app/dependencies.ts`. The current adapters retain localStorage, bundled images and the existing fast-mode behavior.
+## 项目结构
 
-See [module boundaries and extension rules](docs/architecture.md). `npm test` includes dependency checks that prevent core rules from importing UI, stores, adapters or browser APIs. Startup waits for storage hydration before recovery; version-8 snapshots retain the existing key and ten data fields. Current body masks/segments live in `src/adapters/assets/registered-assembly-v3.json`, with v4 back-joint/wing calibration in `registered-backpack.json`; `registered-assembly.json`, `registered-assembly-v2.json` and `registered-assembly-v3.json` are frozen for v1/v2/v3 archives; `assembly-layouts.json` remains for historical recipes. Optional fixed-model source viewports live alongside each manifest in `presentation.json`.
+```text
+Gundamdoro/
+├─ src/
+│  ├─ main.tsx                  # 启动、存档恢复与主/迷你/校准入口分流
+│  ├─ app/                      # 根界面、依赖装配、功能开关
+│  ├─ components/               # React 展示与交互
+│  │  ├─ Mecha/                 # 选型、机型导入、配件展示、奖励、拼装与渲染器
+│  │  ├─ Timer/                 # 预计结束时间、提醒协调与迷你计时器
+│  │  ├─ Inventory/             # 配件仓库与自定义工作台
+│  │  ├─ Hangar/                # 成品仓库与机体详情
+│  │  ├─ Break/                 # 休息页面
+│  │  ├─ Complete/              # 完成页面
+│  │  ├─ Settings/              # 设置弹窗
+│  │  └─ Startup/               # 启动错误与重试界面
+│  ├─ hooks/                    # 计时刷新、阶段完成调度
+│  ├─ store/                    # Zustand 门面、工厂、动作映射与存档接入
+│  ├─ application/              # 用例、端口、快照迁移、计时投影
+│  ├─ domain/                   # 纯业务规则、类型、目录与二维变换数学
+│  ├─ adapters/
+│  │  ├─ platform/              # 时钟、调度、提醒、桌面窗口适配
+│  │  ├─ storage/               # 进度 localStorage 与用户机型文件库
+│  │  ├─ catalog/               # 内置 manifest 发现、用户机型目录合并
+│  │  └─ assets/                # 素材解析、展示裁切、拼装布局与历史配置
+│  ├─ mecha/                    # 模型清单、展示元数据、机体档案设定
+│  ├─ assets/mecha/             # 本地 PNG、拼装母图与素材来源说明
+│  ├─ dev/                      # 仅开发模式的拼装校准工具
+│  ├─ test/                     # 测试替身与辅助数据
+│  ├─ lib/                      # 兼容性工具入口
+│  └─ styles/                   # 全局样式与响应式布局
+├─ src-tauri/
+│  ├─ src/                      # Rust 桌面启动、生命周期与本地机型文件命令
+│  ├─ capabilities/             # 窗口与通知权限
+│  ├─ icons/                    # 安装包及应用图标
+│  ├─ Cargo.toml / Cargo.lock   # Rust 依赖与锁文件
+│  └─ tauri.conf.json           # 窗口、开发地址、打包配置
+├─ tests/                       # 模块边界与素材完整性测试
+├─ public/                      # 网站图标等静态资源
+├─ docs/                        # 架构、素材制作与分功能验收记录
+├─ SPEC.md                      # 需求与已批准变更
+├─ AGENTS.md                    # 仓库开发约束
+├─ package.json / package-lock.json
+├─ vite.config.ts               # React 插件与固定开发端口
+└─ README.md
+```
+
+大部分测试与源码同目录，命名为 `*.test.ts` 或 `*.test.tsx`；根目录的 `tests/` 不是唯一测试入口。`dist/`、`src-tauri/target/`、`output/` 和测试缓存属于生成产物，不提交到 Git。
+
+### 分层与依赖方向
+
+```text
+React components / hooks
+          ↓
+Zustand store facade
+          ↓
+application use cases
+          ↓
+domain rules
+
+app/dependencies.ts → 注入 runtime、storage、catalog、assembly policy
+appAssets / appScheduler → 提供素材解析和阶段调度能力
+```
+
+业务数据由 Zustand 统一持有；组件只调用动作，不自行发明阶段跳转。应用层协调计时完成、配件解锁、固定机体归档和自定义保存；领域层保持纯业务逻辑，不依赖 React、Zustand、Vite 或浏览器 API。
+
+时钟、UUID、随机数、存储和资源等平台能力通过端口与适配器接入。已有依赖边界测试会检查核心层是否误引入 UI、store、adapters 或平台全局变量；这只是扩展基础，不代表已经实现数据库或联网。
+
+### 阅读代码的入口
+
+| 想了解什么 | 入口文件 |
+| --- | --- |
+| 启动、水合与恢复失败重试 | [main.tsx](src/main.tsx)、[createAppStore.ts](src/store/createAppStore.ts) |
+| 页面分流、按钮和窗口内导航 | [App.tsx](src/app/App.tsx) |
+| 状态结构、默认数据与依赖接口 | [types.ts](src/domain/types.ts)、[state.ts](src/application/state.ts)、[ports.ts](src/application/ports.ts) |
+| 专注、休息、取消、放弃与固定机体归档 | [useCases.ts](src/application/useCases.ts)、[archiveBuild.ts](src/application/archiveBuild.ts) |
+| 配件所有权、自定义草稿与保存 | [inventory.ts](src/domain/inventory.ts)、[workbench.ts](src/application/workbench.ts) |
+| 存档校验和旧版本迁移 | [snapshot.ts](src/application/snapshot.ts)、[splitPartsMigration.ts](src/application/splitPartsMigration.ts) |
+| 用户机型表单、导入与本地素材 | [ModelImportScreen.tsx](src/components/Mecha/ModelImportScreen.tsx)、[importModel.ts](src/application/importModel.ts)、[userModelFiles.ts](src/adapters/storage/userModelFiles.ts) |
+| 拼装策略、关节变换与图层绘制 | [assembly.ts](src/domain/assembly.ts)、[registeredAssembly.ts](src/adapters/assets/registeredAssembly.ts)、[RegisteredMecha.tsx](src/components/Mecha/RegisteredMecha.tsx) |
+| 仓库分组与机体故事 | [hangar.ts](src/domain/hangar.ts)、[profiles.ts](src/mecha/profiles.ts) |
+| 预计结束、完成提醒和桌面迷你窗口 | [timerExperience.ts](src/application/timerExperience.ts)、[reminders.ts](src/adapters/platform/reminders.ts)、[miniWindow.ts](src/adapters/platform/miniWindow.ts) |
+
+`useAppStore.ts` 是默认状态门面；未使用的 `useTimerStore.ts` 旧别名已移除。`mecha/loader.ts` 和 `lib/timer.ts` 仍保留正在使用的兼容入口。
+
+### 计时与窗口协作
+
+计时以 `endAt` 时间戳为准，而不是逐秒递减；刷新或重启后重新计算剩余时间。专注完成按 `sessionId` 幂等处理，同一会话不能重复发放配件。
+
+主窗口是唯一业务状态与存档写入者。原生迷你窗口只接收计时投影并发送暂停/继续、同步请求，不水合第二份 store，不独立发奖励或提示；关闭整个应用后不会继续发送提醒。
+
+### 拼装与素材配置
+
+固定机体使用模型声明的独立配件和整机图，自定义机体则从各模型单独的正面拼装母图中通过 SVG 多边形遮罩提取模块。统一语义关节和等比变换控制比例：腰胯连接所选躯干，两条腿连接所选腰胯，翅膀位于身体图层后方。
+
+当前新配方记录 `assemblyProfile: standard-front-v4`。身体几何来自 `registered-assembly-v3.json`，背部关节与翅膀来自 `registered-backpack.json`；v1/v2/v3 注册布局继续保留。2026-10-15 按用户确认移除了不带 profile 的旧渲染器及旧布局文件：这类历史配方记录不删除，但显示“旧版装配已停用”。
+
+`presentation.json` 控制固定配件的展示裁切，腰胯与独立腿部复用拼装母图遮罩；不是所有配件都对应一张新 PNG。详细边界见 [架构文档](docs/architecture.md)。
+
+## 本地数据与兼容性
+
+存储使用 localStorage，键名为 `gundamdoro-app-state`，当前快照版本为 8。保存字段包括阶段、计时器、当前收集、实际专注分钟、设置、已处理会话、成品记录、当前制作 ID、永久配件和工作台草稿；图片字节不写入存档。
+
+启动顺序为“加载用户机型资源 → 读取与校验进度 → 迁移 → 恢复过期计时 → 渲染正常界面”。支持版本 0–7 迁移，旧版已获得的双腿组件会按模型迁移规则展开为腰胯和两条腿，不凭空增加真实专注统计；历史配方与有效的未知引用保留。
+
+无法读取、解析存档，版本过新或当前活动模型不可用时，显示重试界面而不拿默认值覆盖原存档；启动恢复写入失败也会阻止进入正常界面。先检查存储权限、应用版本与资源，再选择“重新读取存档”，不要直接清除数据。
+
+网页存档随浏览器、用户配置和站点 origin 隔离，换端口、协议或使用桌面版都不会自动搬迁。当前没有存档导出/导入或云端备份界面，清理站点数据可能丢失本地进度。
+
+## 扩展机型与功能
+
+新增固定机型时，按以下顺序处理：
+
+1. 在 `src/mecha/<model-id>/manifest.json` 声明稳定 ID、连续的 `stages`、配件键和 `finalAsset`；目录会自动发现，但清单仍需通过校验。
+2. 在 `src/assets/mecha/<model-id>/` 添加本地素材和来源说明；可提供 `presentation.json` 以及机型自己的 `break/break-01.png`，否则使用默认休息场景。
+3. 如需机体详情，在 `src/mecha/profiles.ts` 补充档案；**新增清单不等于自动支持混搭**，自定义拼装还需母图、遮罩、挂点和兼容策略注册。
+4. 涉及已发布模型时保留原有模型/配件 ID、历史资源和配方布局，明确收集顺序变化与存档迁移规则。
+5. 添加目录、配件数、收集、存档、素材和渲染测试，再跑类型检查、前端构建及相关 Windows 验证。
+
+新业务规则放在 `domain/`，跨模块用例放在 `application/`，UI 放在 `components/`；平台或持久化实现放在 `adapters/` 并在组装根注入。不要在 UI 里散落业务规则，也不要让核心层直接访问 localStorage 或桌面 API。
+
+## 文档索引
+
+| 文档 | 内容 |
+| --- | --- |
+| [SPEC.md](SPEC.md) / [AGENTS.md](AGENTS.md) | 需求、已批准变更与工程约束；早期五组件和禁止导入描述以第 26、31–34 节为准 |
+| [architecture.md](docs/architecture.md) | 分层依赖、端口、存档、拼装版本与扩展约束 |
+| [assembly-artwork.md](docs/assembly-artwork.md) / [assembly-artwork-all-models.md](docs/assembly-artwork-all-models.md) | 拼装母图的来源与生成记录 |
+| [qa-all-model-assembly.md](docs/qa-all-model-assembly.md) / [qa-optional-backpack.md](docs/qa-optional-backpack.md) | 七机型、腰腿拆分、混搭和可选翅膀验收 |
+| [qa-workbench-save-visibility.md](docs/qa-workbench-save-visibility.md) / [qa-model-reveal-and-hangar-summary.md](docs/qa-model-reveal-and-hangar-summary.md) | 保存入口、机型轮廓和仓库摘要验收 |
+| [qa-daily-timer.md](docs/qa-daily-timer.md) / [qa-startup-storage.md](docs/qa-startup-storage.md) | 日常计时、桌面窗口和启动存档验收 |
+| [qa-user-model-import.md](docs/qa-user-model-import.md) | 用户机型导入、文件库提交与收集流程验收 |
+
+`docs/qa-*.md` 是各功能当时的验收记录，包含历史组件数、版本和测试数量，不应当作当前版本配置。
+
+## 素材来源与许可证
+
+仓库包含六套原创生成机型，以及用户明确要求纳入的“飞翼零式 EW”生成同人素材。内置素材在构建时本地打包，用户导入素材存入本地资源库；不下载官方图片，也不依赖远程字体或 CDN。
+
+项目附带 [Apache License 2.0](LICENSE)。代码许可证不代表获得飞翼零式角色、名称或同人图的商业使用授权；非官方来源及边界见 [飞翼零式素材说明](src/assets/mecha/wing-zero-ew/ASSETS.md) 和 [全机型拼装母图记录](docs/assembly-artwork-all-models.md)，应保留这些说明。
+
+机体详情中的能力指数与背景故事属于应用内设定；飞翼零式相关内容明确为非官方解读，不是官方参数或授权设定。
+
+## 已知边界
+
+系统通知默认关闭，需要用户开启并授予权限；实际提醒还受操作系统通知设置和勿扰模式影响。提示音依赖交互解锁，整个应用关闭或系统休眠期间不保证提醒投递。
+
+自定义拼装是二维静态模块组合，不是 3D 或骨骼动画；部分生成素材边缘仍可能有细小残留，正式宣传图需额外检查。联网、多设备同步、移动端和更多独立装备类型仍需另行设计与开发。

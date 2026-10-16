@@ -5,13 +5,18 @@ import { browserRuntime, browserScheduler } from '../adapters/platform/browser'
 import { getBrowserStorage } from '../adapters/storage/browserStorage'
 import type { AppDependencies } from '../application/ports'
 import { registeredAssemblyPolicy } from '../adapters/assets/registeredAssembly'
+import { createUserModelLibrary } from '../adapters/catalog/userModelLibrary'
+import { userModelFiles } from '../adapters/storage/userModelFiles'
+
+const userModels = createUserModelLibrary(bundledCatalog, bundledAssets, userModelFiles)
 
 export const appDependencies: AppDependencies = {
-  catalog: bundledCatalog,
+  catalog: userModels.catalog,
   runtime: browserRuntime,
   storage: getBrowserStorage,
   assembly: registeredAssemblyPolicy,
+  models: userModels.library,
 }
 
-export const appAssets = bundledAssets
+export const appAssets = userModels.assets
 export const appScheduler = browserScheduler
