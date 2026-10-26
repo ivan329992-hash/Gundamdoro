@@ -13,7 +13,14 @@ export function usePhaseTransitions(): void {
   const reducedMotion = useReducedMotion()
   const reducedAssembly = phase === 'ASSEMBLY' && Boolean(reducedMotion)
 
-  useEffect(() => schedulePhaseCompletion(
-    phase, reducedAssembly, { finishPartReveal, finishAssemblyAnimation }, appScheduler,
-  ), [phase, currentStage, reducedAssembly, finishPartReveal, finishAssemblyAnimation])
+  useEffect(
+    () =>
+      schedulePhaseCompletion(
+        phase,
+        reducedAssembly,
+        { finishPartReveal, finishAssemblyAnimation },
+        appScheduler,
+      ),
+    [phase, currentStage, reducedAssembly, finishPartReveal, finishAssemblyAnimation],
+  )
 }

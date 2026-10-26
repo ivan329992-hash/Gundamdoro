@@ -6,20 +6,32 @@ export function createFakeApp(millisecondsPerMinute = 60_000) {
   const values = new Map<string, string>()
   const storage: KeyValueStorage = {
     getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => { values.set(key, value) },
-    removeItem: (key) => { values.delete(key) },
+    setItem: (key, value) => {
+      values.set(key, value)
+    },
+    removeItem: (key) => {
+      values.delete(key)
+    },
   }
   let now = 1_000
   let nextId = 0
   const dependencies: AppDependencies = {
-    catalog: createMechaCatalog([{
-      id: 'test-model', name: 'TEST MODEL', totalStages: 3, finalAsset: 'final/model.png',
-      stages: [
-        { stage: 1, name: 'CORE', asset: 'parts/core.png' },
-        { stage: 2, name: 'HEAD', asset: 'parts/head.png' },
-        { stage: 3, name: 'LEGS', asset: 'parts/legs.png' },
+    catalog: createMechaCatalog(
+      [
+        {
+          id: 'test-model',
+          name: 'TEST MODEL',
+          totalStages: 3,
+          finalAsset: 'final/model.png',
+          stages: [
+            { stage: 1, name: 'CORE', asset: 'parts/core.png' },
+            { stage: 2, name: 'HEAD', asset: 'parts/head.png' },
+            { stage: 3, name: 'LEGS', asset: 'parts/legs.png' },
+          ],
+        },
       ],
-    }], 'test-model'),
+      'test-model',
+    ),
     runtime: {
       now: () => now,
       newId: () => `test-id-${++nextId}`,
@@ -28,5 +40,12 @@ export function createFakeApp(millisecondsPerMinute = 60_000) {
     },
     storage: () => storage,
   }
-  return { dependencies, values, storage, setNow: (value: number) => { now = value } }
+  return {
+    dependencies,
+    values,
+    storage,
+    setNow: (value: number) => {
+      now = value
+    },
+  }
 }

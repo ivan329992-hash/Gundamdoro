@@ -4,7 +4,11 @@ import { createUserModelPackage } from '../../domain/userModels'
 import { draftModel } from '../../test/userModels'
 
 const native = vi.hoisted(() => ({ desktop: false, invoke: vi.fn() }))
-vi.mock('@tauri-apps/api/core', () => ({ isTauri: () => native.desktop, invoke: native.invoke, convertFileSrc: (path: string) => `asset:${path}` }))
+vi.mock('@tauri-apps/api/core', () => ({
+  isTauri: () => native.desktop,
+  invoke: native.invoke,
+  convertFileSrc: (path: string) => `asset:${path}`,
+}))
 
 class MemoryDirectory {
   readonly kind = 'directory'
@@ -28,13 +32,21 @@ class MemoryDirectory {
       createWritable: async () => {
         let pending = new Blob()
         return {
-          write: async (data: Blob | string) => { if (this.failWrite === name) throw new Error('quota exceeded'); pending = new Blob([data]) },
-          close: async () => { this.files.set(name, pending) }, abort: vi.fn(async () => {}),
+          write: async (data: Blob | string) => {
+            if (this.failWrite === name) throw new Error('quota exceeded')
+            pending = new Blob([data])
+          },
+          close: async () => {
+            this.files.set(name, pending)
+          },
+          abort: vi.fn(async () => {}),
         }
       },
     }
   }
-  async *entries() { for (const entry of this.directories.entries()) yield entry }
+  async *entries() {
+    for (const entry of this.directories.entries()) yield entry
+  }
 }
 
 function filesystem() {
@@ -46,7 +58,12 @@ function filesystem() {
   return root
 }
 
-afterEach(() => { native.desktop = false; vi.unstubAllGlobals(); vi.restoreAllMocks(); native.invoke.mockReset() })
+afterEach(() => {
+  native.desktop = false
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+  native.invoke.mockReset()
+})
 
 describe('local user model file repository', () => {
   it('does not create storage for an empty library, saves separate binaries and rebuilds URLs on restart', async () => {
@@ -57,7 +74,10 @@ describe('local user model file repository', () => {
     const saved = await userModelFiles.save(model)
     const directory = root.directories.get('gundamdoro-user-models')!.directories.get('user-test')!
     expect(directory.files.size).toBe(5)
-    expect(JSON.parse(await directory.files.get('manifest.json')!.text())).toEqual({ version: 1, manifest: model.manifest })
+    expect(JSON.parse(await directory.files.get('manifest.json')!.text())).toEqual({
+      version: 1,
+      manifest: model.manifest,
+    })
     expect(saved.assets['final.png']).toMatch(/^blob:/)
     const restored = await userModelFiles.load()
     expect(restored[0].manifest).toEqual(model.manifest)
@@ -81,11 +101,17 @@ describe('local user model file repository', () => {
     const library = await root.getDirectoryHandle('gundamdoro-user-models', { create: true })
     const create = vi.spyOn(library, 'getDirectoryHandle')
     create.mockImplementation(async (name, options) => {
-      const directory = await MemoryDirectory.prototype.getDirectoryHandle.call(library, name, options)
+      const directory = await MemoryDirectory.prototype.getDirectoryHandle.call(
+        library,
+        name,
+        options,
+      )
       directory.failWrite = 'manifest.json'
       return directory
     })
-    await expect(userModelFiles.save(createUserModelPackage(draftModel(), 'user-test'))).rejects.toThrow('quota exceeded')
+    await expect(
+      userModelFiles.save(createUserModelPackage(draftModel(), 'user-test')),
+    ).rejects.toThrow('quota exceeded')
     expect(URL.revokeObjectURL).toHaveBeenCalledTimes(4)
     expect(await userModelFiles.load()).toEqual([])
   })
@@ -102,17 +128,26 @@ describe('local user model file repository', () => {
   it('leaves builtins usable without OPFS but reports unsupported import explicitly', async () => {
     vi.stubGlobal('navigator', { storage: {} })
     expect(await userModelFiles.load()).toEqual([])
-    await expect(userModelFiles.save(createUserModelPackage(draftModel(), 'user-test'))).rejects.toThrow('不支持')
+    await expect(
+      userModelFiles.save(createUserModelPackage(draftModel(), 'user-test')),
+    ).rejects.toThrow('不支持')
   })
 
   it('uses native scoped commands and reconstructs asset protocol URLs rather than source-file references', async () => {
     native.desktop = true
     const model = createUserModelPackage(draftModel(), 'user-test')
-    const record = { manifest: model.manifest, assets: { 'final.png': 'app-data/user-models/user-test/final.png' } }
+    const record = {
+      manifest: model.manifest,
+      assets: { 'final.png': 'app-data/user-models/user-test/final.png' },
+    }
     native.invoke.mockResolvedValueOnce(record).mockResolvedValueOnce([record])
-    expect((await userModelFiles.save(model)).assets['final.png']).toBe('asset:app-data/user-models/user-test/final.png')
+    expect((await userModelFiles.save(model)).assets['final.png']).toBe(
+      'asset:app-data/user-models/user-test/final.png',
+    )
     expect(native.invoke.mock.calls[0][0]).toBe('save_user_model')
-    expect(native.invoke.mock.calls[0][1].images[0].bytes).toEqual(Array.from(model.images['final.png']))
+    expect(native.invoke.mock.calls[0][1].images[0].bytes).toEqual(
+      Array.from(model.images['final.png']),
+    )
     expect((await userModelFiles.load())[0].manifest).toEqual(model.manifest)
     expect(native.invoke.mock.calls[1][0]).toBe('load_user_models')
   })

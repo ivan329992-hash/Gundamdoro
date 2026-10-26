@@ -15,16 +15,26 @@ export async function minimizeMain(): Promise<void> {
 
 export async function restoreMain(): Promise<void> {
   const main = await Window.getByLabel('main')
-  await main?.unminimize()
-  await main?.show()
-  await main?.setFocus()
+  if (!main) throw new Error('Main window unavailable')
+  await main.unminimize()
+  await main.show()
+  await main.setFocus()
   await getCurrentWindow().hide()
 }
 
-export async function dragMini(): Promise<void> { await getCurrentWindow().startDragging() }
-export async function hideMini(): Promise<void> { await getCurrentWindow().hide() }
+export async function dragMini(): Promise<void> {
+  await getCurrentWindow().startDragging()
+}
+export async function hideMini(): Promise<void> {
+  await getCurrentWindow().hide()
+}
 
-export async function connectMainTimer(read: () => TimerProjection, enabled: () => boolean, sync: () => void, togglePause: () => void): Promise<() => void> {
+export async function connectMainTimer(
+  read: () => TimerProjection,
+  enabled: () => boolean,
+  sync: () => void,
+  togglePause: () => void,
+): Promise<() => void> {
   const main = getCurrentWindow()
   const mini = await Window.getByLabel('mini')
   if (!mini) throw new Error('Mini timer window unavailable')
@@ -33,26 +43,56 @@ export async function connectMainTimer(read: () => TimerProjection, enabled: () 
   let disposed = false
   let wasMinimized = false
   let lastEnabled = enabled()
+  let checkingVisibility = false
   try {
-    listeners.push(await listen(REQUEST, () => { sync(); void publish() }))
-    listeners.push(await listen<string>(CONTROL, ({ payload }) => { if (payload === 'toggle-pause') togglePause() }))
+    listeners.push(
+      await listen(REQUEST, () => {
+        sync()
+        void publish()
+      }),
+    )
+    listeners.push(
+      await listen<string>(CONTROL, ({ payload }) => {
+        if (payload === 'toggle-pause') togglePause()
+      }),
+    )
     const check = async () => {
-      if (disposed) return
-      const minimized = await main.isMinimized()
-      const allow = enabled()
-      if (minimized !== wasMinimized || allow !== lastEnabled) {
+      if (disposed || checkingVisibility) return
+      checkingVisibility = true
+      try {
+        const minimized = await main.isMinimized()
+        if (disposed) return
+        const allow = enabled()
+        if (minimized === wasMinimized && allow === lastEnabled) return
+        if (minimized && allow) {
+          await publish()
+          if (disposed) return
+          await mini.show()
+        } else await mini.hide()
+        // 仅在窗口操作成功后确认状态，失败留给下一次检查重试。
         wasMinimized = minimized
         lastEnabled = allow
-        if (minimized && allow) { await publish(); await mini.show() }
-        else await mini.hide()
+      } finally {
+        checkingVisibility = false
       }
     }
-    listeners.push(await main.onResized(() => { void check().catch(() => {}) }))
-    const heartbeat = window.setInterval(() => { sync(); void publish(); void check().catch(() => {}) }, 1000)
+    listeners.push(
+      await main.onResized(() => {
+        void check().catch(() => {})
+      }),
+    )
+    const heartbeat = window.setInterval(() => {
+      sync()
+      void publish()
+      void check().catch(() => {})
+    }, 1000)
     listeners.push(() => window.clearInterval(heartbeat))
     await check()
     await publish()
-    return () => { disposed = true; listeners.forEach((stop) => stop()) }
+    return () => {
+      disposed = true
+      listeners.forEach((stop) => stop())
+    }
   } catch (error) {
     disposed = true
     listeners.forEach((stop) => stop())
@@ -62,9 +102,21 @@ export async function connectMainTimer(read: () => TimerProjection, enabled: () 
 
 export async function receiveTimer(update: (state: TimerProjection) => void): Promise<() => void> {
   const unlisten = await listen<TimerProjection>(STATE, ({ payload }) => update(payload))
-  try { await emitTo('main', REQUEST) } catch (error) { unlisten(); throw error }
-  const heartbeat = window.setInterval(() => { void emitTo('main', REQUEST).catch(() => {}) }, 1000)
-  return () => { window.clearInterval(heartbeat); unlisten() }
+  try {
+    await emitTo('main', REQUEST)
+  } catch (error) {
+    unlisten()
+    throw error
+  }
+  const heartbeat = window.setInterval(() => {
+    void emitTo('main', REQUEST).catch(() => {})
+  }, 1000)
+  return () => {
+    window.clearInterval(heartbeat)
+    unlisten()
+  }
 }
 
-export async function requestPause(): Promise<void> { await emitTo('main', CONTROL, 'toggle-pause') }
+export async function requestPause(): Promise<void> {
+  await emitTo('main', CONTROL, 'toggle-pause')
+}

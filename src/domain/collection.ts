@@ -2,11 +2,18 @@
 import type { AppData, AssemblyState, MechaManifest } from './types'
 
 export function canSelectMecha(state: Pick<AppData, 'phase' | 'assembly'>): boolean {
-  return state.phase === 'COMPLETE' || (state.phase === 'READY' && state.assembly.currentStage === 0)
+  return (
+    state.phase === 'COMPLETE' || (state.phase === 'READY' && state.assembly.currentStage === 0)
+  )
 }
 
 export function createCollection(mecha: MechaManifest): AssemblyState {
-  return { mechaId: mecha.id, currentStage: 0, totalStages: mecha.totalStages, completedFocusSessions: 0 }
+  return {
+    mechaId: mecha.id,
+    currentStage: 0,
+    totalStages: mecha.totalStages,
+    completedFocusSessions: 0,
+  }
 }
 
 export function isCollectionComplete(assembly: AssemblyState): boolean {

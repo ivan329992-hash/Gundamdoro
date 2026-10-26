@@ -15,7 +15,14 @@ let starting = false
 async function startApp() {
   if (starting) return
   starting = true
-  root.render(<StartupScreen loading onRetry={() => { void startApp() }} />)
+  root.render(
+    <StartupScreen
+      loading
+      onRetry={() => {
+        void startApp()
+      }}
+    />,
+  )
   try {
     await initializeAppStore(useAppStore)
     root.render(
@@ -24,7 +31,14 @@ async function startApp() {
       </StrictMode>,
     )
   } catch {
-    root.render(<StartupScreen loading={false} onRetry={() => { void startApp() }} />)
+    root.render(
+      <StartupScreen
+        loading={false}
+        onRetry={() => {
+          void startApp()
+        }}
+      />,
+    )
   } finally {
     starting = false
   }

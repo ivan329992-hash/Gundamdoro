@@ -3,7 +3,11 @@ import { addCompletedBuild } from '../domain/hangar'
 import type { AppData } from '../domain/types'
 import type { AppDependencies } from './ports'
 
-export function archiveCompletedBuild(state: AppData, completedAt: number | null, dependencies: AppDependencies): AppData {
+export function archiveCompletedBuild(
+  state: AppData,
+  completedAt: number | null,
+  dependencies: AppDependencies,
+): AppData {
   const id = state.currentBuildId ?? dependencies.runtime.newId()
   if (state.hangar.some((entry) => entry.id === id)) return { ...state, currentBuildId: id }
   return {

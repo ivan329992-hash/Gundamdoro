@@ -6,7 +6,9 @@ import { describe, expect, it } from 'vitest'
 const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
 const manifests = readdirSync(resolve(sourceRoot, 'mecha'), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
-  .map((entry) => JSON.parse(readFileSync(resolve(sourceRoot, 'mecha', entry.name, 'manifest.json'), 'utf8')))
+  .map((entry) =>
+    JSON.parse(readFileSync(resolve(sourceRoot, 'mecha', entry.name, 'manifest.json'), 'utf8')),
+  )
 
 function hasTransparencyChunk(bytes) {
   let offset = 8
@@ -24,8 +26,17 @@ describe('runtime mecha PNG assets', () => {
     const assetRoot = resolve(sourceRoot, 'assets', 'mecha', manifest.id)
     const canvases = { original: new Set(), assembly: new Set() }
     const presentationPath = resolve(sourceRoot, 'mecha', manifest.id, 'presentation.json')
-    const presentations = existsSync(presentationPath) ? Object.values(JSON.parse(readFileSync(presentationPath, 'utf8'))).filter(Array.isArray).flat() : []
-    for (const relativePath of new Set([manifest.finalAsset, ...manifest.stages.map((part) => part.asset), ...(manifest.legacyParts ?? []).map((part) => part.asset), ...presentations.map((image) => image.asset)])) {
+    const presentations = existsSync(presentationPath)
+      ? Object.values(JSON.parse(readFileSync(presentationPath, 'utf8')))
+          .filter(Array.isArray)
+          .flat()
+      : []
+    for (const relativePath of new Set([
+      manifest.finalAsset,
+      ...manifest.stages.map((part) => part.asset),
+      ...(manifest.legacyParts ?? []).map((part) => part.asset),
+      ...presentations.map((image) => image.asset),
+    ])) {
       const path = resolve(assetRoot, relativePath)
       expect(path.startsWith(assetRoot + sep)).toBe(true)
       const bytes = readFileSync(path)
@@ -34,10 +45,13 @@ describe('runtime mecha PNG assets', () => {
       const height = bytes.readUInt32BE(20)
       expect(width).toBeGreaterThan(0)
       expect(height).toBeGreaterThan(0)
-      if (relativePath.startsWith('assembly/')) expect(Math.abs(width * 4 - height * 3)).toBeLessThanOrEqual(7)
+      if (relativePath.startsWith('assembly/'))
+        expect(Math.abs(width * 4 - height * 3)).toBeLessThanOrEqual(7)
       else expect(width * 4).toBe(height * 3)
       expect([4, 6].includes(bytes[25]) || hasTransparencyChunk(bytes)).toBe(true)
-      canvases[relativePath.startsWith('assembly/') ? 'assembly' : 'original'].add(`${width}x${height}`)
+      canvases[relativePath.startsWith('assembly/') ? 'assembly' : 'original'].add(
+        `${width}x${height}`,
+      )
       for (const image of presentations.filter((image) => image.asset === relativePath)) {
         expect(image.image).toEqual([width, height])
         const [x, y, w, h] = image.bounds

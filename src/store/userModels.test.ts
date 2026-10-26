@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createUserModelLibrary, type StoredUserModel, type UserModelRepository } from '../adapters/catalog/userModelLibrary'
+import {
+  createUserModelLibrary,
+  type StoredUserModel,
+  type UserModelRepository,
+} from '../adapters/catalog/userModelLibrary'
 import { draftModel } from '../test/userModels'
 import { createUserModelPackage } from '../domain/userModels'
 import { createFakeApp } from '../test/fakeApp'
@@ -14,12 +18,22 @@ function setup() {
   const repository: UserModelRepository = {
     load: vi.fn(async () => [...records]),
     save: vi.fn(async (model) => {
-      const record = { manifest: model.manifest, assets: Object.fromEntries(Object.keys(model.images).map((name) => [name, `local:${model.manifest.id}/${name}`])) }
+      const record = {
+        manifest: model.manifest,
+        assets: Object.fromEntries(
+          Object.keys(model.images).map((name) => [name, `local:${model.manifest.id}/${name}`]),
+        ),
+      }
       records.push(record)
       return record
     }),
   }
-  const makeLibrary = () => createUserModelLibrary(fake.dependencies.catalog, { resolve: () => 'bundled:image' }, repository)
+  const makeLibrary = () =>
+    createUserModelLibrary(
+      fake.dependencies.catalog,
+      { resolve: () => 'bundled:image' },
+      repository,
+    )
   const library = makeLibrary()
   const dependencies = { ...fake.dependencies, catalog: library.catalog, models: library.library }
   const store = createAppStore(dependencies)
@@ -38,15 +52,24 @@ describe('runtime user models and persisted progress', () => {
     expect(library.catalog.find('test-model')).not.toBeNull()
     expect(library.assets.resolve(id, 'part-1.png')).toBe(`local:${id}/part-1.png`)
     expect(library.assets.resolve('test-model', 'parts/core.png')).toBe('bundled:image')
-    expect(getPartDefinitions(library.catalog).filter((part) => part.mechaId === id).some((part) => supportsAssemblyPart(part, { profile: 'standard-front-v4', modelIds: ['test-model'] }))).toBe(false)
+    expect(
+      getPartDefinitions(library.catalog)
+        .filter((part) => part.mechaId === id)
+        .some((part) =>
+          supportsAssemblyPart(part, { profile: 'standard-front-v4', modelIds: ['test-model'] }),
+        ),
+    ).toBe(false)
   })
 
-  it.each(['FOCUS', 'PART_REWARD', 'BREAK', 'ASSEMBLY'] as const)('rejects imports in %s before persistence', async (phase) => {
-    const { store, repository } = setup()
-    store.setState({ phase })
-    await expect(store.getState().importModel(draftModel())).rejects.toThrow('待机')
-    expect(repository.save).not.toHaveBeenCalled()
-  })
+  it.each(['FOCUS', 'PART_REWARD', 'BREAK', 'ASSEMBLY'] as const)(
+    'rejects imports in %s before persistence',
+    async (phase) => {
+      const { store, repository } = setup()
+      store.setState({ phase })
+      await expect(store.getState().importModel(draftModel())).rejects.toThrow('待机')
+      expect(repository.save).not.toHaveBeenCalled()
+    },
+  )
 
   it('keeps the catalog and progress unchanged after persistence failure and permits retry', async () => {
     const { store, repository, library } = setup()
@@ -68,7 +91,11 @@ describe('runtime user models and persisted progress', () => {
     context.store.getState().pauseTimer(2000)
     const timer = context.store.getState().timer
     const next = context.makeLibrary()
-    const store = createAppStore({ ...context.fake.dependencies, catalog: next.catalog, models: next.library })
+    const store = createAppStore({
+      ...context.fake.dependencies,
+      catalog: next.catalog,
+      models: next.library,
+    })
     expect(next.catalog.find(id)).toBeNull()
     await initializeAppStore(store)
     expect(next.catalog.find(id)).not.toBeNull()
@@ -100,9 +127,17 @@ describe('runtime user models and persisted progress', () => {
     store.getState().finishAssemblyAnimation()
     store.getState().finishAssemblyAnimation()
     expect(store.getState().hangar).toHaveLength(1)
-    expect(store.getState().hangar[0]).toMatchObject({ mechaId: id, completedFocusSessions: 3, totalFocusedMinutes: 75 })
+    expect(store.getState().hangar[0]).toMatchObject({
+      mechaId: id,
+      completedFocusSessions: 3,
+      totalFocusedMinutes: 75,
+    })
     const next = context.makeLibrary()
-    const restored = createAppStore({ ...context.fake.dependencies, catalog: next.catalog, models: next.library })
+    const restored = createAppStore({
+      ...context.fake.dependencies,
+      catalog: next.catalog,
+      models: next.library,
+    })
     await initializeAppStore(restored)
     expect(restored.getState().phase).toBe('COMPLETE')
     restored.getState().resetMecha()
@@ -132,7 +167,10 @@ describe('runtime user models and persisted progress', () => {
     await expect(context.library.library.load()).rejects.toThrow()
     expect(context.library.catalog.list()).toHaveLength(1)
     const model = createUserModelPackage(draftModel(), 'user-restored')
-    context.records.splice(0, 1, { manifest: model.manifest, assets: Object.fromEntries(Object.keys(model.images).map((name) => [name, 'local:image'])) })
+    context.records.splice(0, 1, {
+      manifest: model.manifest,
+      assets: Object.fromEntries(Object.keys(model.images).map((name) => [name, 'local:image'])),
+    })
     await context.library.library.load()
     expect(context.library.catalog.find('user-restored')).not.toBeNull()
   })

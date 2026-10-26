@@ -20,12 +20,12 @@ Shared suffix: Keep this exact robot's geometry, panel seams, colors, surface fi
 
 ## Source image
 
-`final/assembled.png` was copied from `exec-c4ab2fa4-c54d-4438-8761-4ce9f5516420.png`. Official product reference URLs and design directions are recorded in `docs/design-four-models.md`; no official image was added to the runtime assets.
+`final/assembled.png` was copied from `exec-c4ab2fa4-c54d-4438-8761-4ce9f5516420.png`. Official product pages informed design directions only; no official image was added to the runtime assets. Detailed design references and prompts are local-only and are not distributed with this repository.
 
 ## Generated part sources
 
 <!-- generated-part-sources -->
-- `parts/leg-unit.png`: `exec-b4b13f33-92c6-42d2-be96-89e194082a58.png` (resume prompt in `docs/design-four-models-resume.md`)
+- `parts/leg-unit.png`: `exec-b4b13f33-92c6-42d2-be96-89e194082a58.png` (local-only refinement prompt)
 - `parts/right-arm.png`: `exec-a7be59ac-981e-4008-ae5a-a4fa2a2a3583.png`
 - `parts/left-arm.png`: `exec-a6aff71f-8590-4bdb-84a4-d55e88924200.png`
 - `parts/head.png`: `exec-8e6009ef-5646-40b9-8689-6a19afa16b06.png`

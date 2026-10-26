@@ -28,10 +28,14 @@ export function MechaDisplay({ currentStage, highlightStage, mechaId }: MechaDis
               transition={{ duration: reduceMotion ? 0 : 0.8 }}
             >
               <div className="part-preview">
-                {unlocked ? <StageImage mechaId={manifest.id} stage={part.stage} className="part-image" /> : <span className="locked-part">LOCKED</span>}
+                {unlocked ? (
+                  <StageImage mechaId={manifest.id} stage={part.stage} className="part-image" />
+                ) : (
+                  <span className="locked-part">未解锁</span>
+                )}
               </div>
               <strong>{part.name}</strong>
-              <span className="part-status">{unlocked ? 'COLLECTED' : 'AWAITING FOCUS'}</span>
+              <span className="part-status">{unlocked ? '已收集' : '待解锁'}</span>
             </motion.li>
           )
         })}

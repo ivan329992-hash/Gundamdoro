@@ -1,12 +1,53 @@
 import type { MechaCatalog } from './catalog'
-import type { AppPhase, Composition, DraftComposition, LegacyPartSlot, MechaStage, ModularPartSlot, PartDefinition, PartSlot, WorkbenchDraft } from './types'
+import type {
+  AppPhase,
+  Composition,
+  DraftComposition,
+  LegacyPartSlot,
+  MechaStage,
+  ModularPartSlot,
+  PartDefinition,
+  PartSlot,
+  WorkbenchDraft,
+} from './types'
 
-export const PART_SLOTS: readonly LegacyPartSlot[] = ['torso', 'head', 'left-arm', 'right-arm', 'legs']
-export const MODULAR_PART_SLOTS: readonly ModularPartSlot[] = ['torso', 'head', 'left-arm', 'right-arm', 'hips', 'left-leg', 'right-leg']
-export const ALL_PART_SLOTS: readonly PartSlot[] = [...PART_SLOTS, 'hips', 'left-leg', 'right-leg', 'wings']
+export const PART_SLOTS: readonly LegacyPartSlot[] = [
+  'torso',
+  'head',
+  'left-arm',
+  'right-arm',
+  'legs',
+]
+export const MODULAR_PART_SLOTS: readonly ModularPartSlot[] = [
+  'torso',
+  'head',
+  'left-arm',
+  'right-arm',
+  'hips',
+  'left-leg',
+  'right-leg',
+]
+export const ALL_PART_SLOTS: readonly PartSlot[] = [
+  ...PART_SLOTS,
+  'hips',
+  'left-leg',
+  'right-leg',
+  'wings',
+]
+export const WORKBENCH_NAME_LIMIT = 40
+
+export function normalizeWorkbenchName(value: string): string {
+  return Array.from(value).slice(0, WORKBENCH_NAME_LIMIT).join('')
+}
 export const PART_SLOT_LABELS: Record<PartSlot, string> = {
-  torso: '躯干', head: '头部', 'left-arm': '左臂', 'right-arm': '右臂', legs: '腿部',
-  hips: '腰胯', 'left-leg': '左腿', 'right-leg': '右腿',
+  torso: '躯干',
+  head: '头部',
+  'left-arm': '左臂',
+  'right-arm': '右臂',
+  legs: '腿部',
+  hips: '腰胯',
+  'left-leg': '左腿',
+  'right-leg': '右腿',
   wings: '背包／翅膀',
 }
 
@@ -46,10 +87,17 @@ export function getPartIdSlot(value: unknown): PartSlot | null {
 }
 
 export function getPartDefinitions(catalog: MechaCatalog, includeLegacy = false): PartDefinition[] {
-  return catalog.list().flatMap((model) => [...model.stages, ...(includeLegacy ? model.legacyParts ?? [] : [])].map((part) => ({
-    id: getPartId(model.id, getStagePartKey(part)), mechaId: model.id, mechaName: model.name,
-    stage: part.stage, slot: getStagePartSlot(part), name: part.name, asset: part.asset,
-  })))
+  return catalog.list().flatMap((model) =>
+    [...model.stages, ...(includeLegacy ? (model.legacyParts ?? []) : [])].map((part) => ({
+      id: getPartId(model.id, getStagePartKey(part)),
+      mechaId: model.id,
+      mechaName: model.name,
+      stage: part.stage,
+      slot: getStagePartSlot(part),
+      name: part.name,
+      asset: part.asset,
+    })),
+  )
 }
 
 export function unlockPart(parts: readonly string[], partId: string): string[] {
@@ -65,15 +113,23 @@ export function canUseWorkbench(phase: AppPhase): boolean {
 }
 
 export function getCompositionSlots(parts: DraftComposition): readonly PartSlot[] {
-  const body = parts.hips || parts['left-leg'] || parts['right-leg'] ? MODULAR_PART_SLOTS : PART_SLOTS
+  const body =
+    parts.hips || parts['left-leg'] || parts['right-leg'] ? MODULAR_PART_SLOTS : PART_SLOTS
   return parts.wings ? [...body, 'wings'] : body
 }
 
-export function isCompositionComplete(parts: DraftComposition, unlocked: readonly string[], catalog: MechaCatalog,
-  slots: readonly PartSlot[] = getCompositionSlots(parts)): parts is Composition {
+export function isCompositionComplete(
+  parts: DraftComposition,
+  unlocked: readonly string[],
+  catalog: MechaCatalog,
+  slots: readonly PartSlot[] = getCompositionSlots(parts),
+): parts is Composition {
   const definitions = getPartDefinitions(catalog, true)
-  return slots.every((slot) => unlocked.includes(parts[slot] ?? '')
-    && definitions.some((part) => part.id === parts[slot] && part.slot === slot))
+  return slots.every(
+    (slot) =>
+      unlocked.includes(parts[slot] ?? '') &&
+      definitions.some((part) => part.id === parts[slot] && part.slot === slot),
+  )
 }
 
 export function equalComposition(a: DraftComposition, b: DraftComposition): boolean {

@@ -17,13 +17,39 @@ export function AssetImage({ src, alt, className, viewport }: AssetImageProps) {
     return (
       <div className="asset-error" role="alert">
         <span>MECHA ASSET ERROR</span>
-        <button type="button" disabled={!src} onClick={() => { setFailed(false); setRetry((value) => value + 1) }}>RETRY</button>
+        <button
+          type="button"
+          disabled={!src}
+          onClick={() => {
+            setFailed(false)
+            setRetry((value) => value + 1)
+          }}
+        >
+          RETRY
+        </button>
       </div>
     )
   }
 
-  if (viewport) return <svg key={retry} className={className} viewBox={viewport.bounds.join(' ')} role="img" aria-label={alt} overflow="hidden">
-    <image href={src} width={viewport.image[0]} height={viewport.image[1]} onError={() => setFailed(true)} />
-  </svg>
-  return <img key={retry} className={className} src={src} alt={alt} onError={() => setFailed(true)} />
+  if (viewport)
+    return (
+      <svg
+        key={retry}
+        className={className}
+        viewBox={viewport.bounds.join(' ')}
+        role="img"
+        aria-label={alt}
+        overflow="hidden"
+      >
+        <image
+          href={src}
+          width={viewport.image[0]}
+          height={viewport.image[1]}
+          onError={() => setFailed(true)}
+        />
+      </svg>
+    )
+  return (
+    <img key={retry} className={className} src={src} alt={alt} onError={() => setFailed(true)} />
+  )
 }

@@ -11,43 +11,73 @@ export interface MechaCatalog {
 function isMechaStage(value: unknown): value is MechaStage {
   if (typeof value !== 'object' || value === null) return false
   const stage = value as Partial<MechaStage>
-  return Number.isInteger(stage.stage)
-    && typeof stage.name === 'string' && stage.name.length > 0
-    && typeof stage.asset === 'string' && stage.asset.length > 0
-    && (stage.slot === undefined || isPartSlot(stage.slot))
-    && (stage.partId === undefined || isPartKey(stage.partId))
+  return (
+    Number.isInteger(stage.stage) &&
+    typeof stage.name === 'string' &&
+    stage.name.length > 0 &&
+    typeof stage.asset === 'string' &&
+    stage.asset.length > 0 &&
+    (stage.slot === undefined || isPartSlot(stage.slot)) &&
+    (stage.partId === undefined || isPartKey(stage.partId))
+  )
 }
 
 function loadManifest(value: unknown): MechaManifest {
   if (typeof value !== 'object' || value === null) throw new Error('Invalid mecha manifest')
   const manifest = value as Partial<MechaManifest>
-  if (typeof manifest.id !== 'string'
-    || typeof manifest.name !== 'string'
-    || typeof manifest.finalAsset !== 'string'
-    || !Array.isArray(manifest.stages)) throw new Error('Invalid mecha manifest')
+  if (
+    typeof manifest.id !== 'string' ||
+    typeof manifest.name !== 'string' ||
+    typeof manifest.finalAsset !== 'string' ||
+    !Array.isArray(manifest.stages)
+  )
+    throw new Error('Invalid mecha manifest')
 
   const totalStages = manifest.stages.length
   const stages = manifest.stages.filter(isMechaStage)
-  if (totalStages < 1 || stages.length !== totalStages
-    || new Set(stages.map((stage) => stage.stage)).size !== totalStages
-    || stages.some((stage) => stage.stage < 1 || stage.stage > totalStages)) {
+  if (
+    totalStages < 1 ||
+    stages.length !== totalStages ||
+    new Set(stages.map((stage) => stage.stage)).size !== totalStages ||
+    stages.some((stage) => stage.stage < 1 || stage.stage > totalStages)
+  ) {
     throw new Error('Mecha manifest stages do not match totalStages')
   }
   const slots = stages.map(getStagePartSlot).filter((slot) => slot !== undefined)
   if (new Set(slots).size !== slots.length) {
     throw new Error('Mecha part slots must be unique')
   }
-  if (new Set(stages.map(getStagePartKey)).size !== totalStages) throw new Error('Mecha part IDs must be unique')
+  if (new Set(stages.map(getStagePartKey)).size !== totalStages)
+    throw new Error('Mecha part IDs must be unique')
   const legacyParts = manifest.legacyParts
-  if (legacyParts !== undefined && (!Array.isArray(legacyParts) || legacyParts.some((part) => !isMechaStage(part) || part.stage < 1 || part.stage > totalStages
-    || (part.splitBeforeVersion !== undefined && (!Number.isInteger(part.splitBeforeVersion) || part.splitBeforeVersion < 1))
-    || !Array.isArray(part.splitInto) || part.splitInto.length < 2 || new Set(part.splitInto).size !== part.splitInto.length
-    || !part.splitInto.every((key) => stages.some((stage) => getStagePartKey(stage) === key))
-    || stages.some((stage) => getStagePartKey(stage) === getStagePartKey(part)))
-    || new Set(legacyParts.map(getStagePartKey)).size !== legacyParts.length)) throw new Error('Invalid legacy component mapping')
+  if (
+    legacyParts !== undefined &&
+    (!Array.isArray(legacyParts) ||
+      legacyParts.some(
+        (part) =>
+          !isMechaStage(part) ||
+          part.stage < 1 ||
+          part.stage > totalStages ||
+          (part.splitBeforeVersion !== undefined &&
+            (!Number.isInteger(part.splitBeforeVersion) || part.splitBeforeVersion < 1)) ||
+          !Array.isArray(part.splitInto) ||
+          part.splitInto.length < 2 ||
+          new Set(part.splitInto).size !== part.splitInto.length ||
+          !part.splitInto.every((key) => stages.some((stage) => getStagePartKey(stage) === key)) ||
+          stages.some((stage) => getStagePartKey(stage) === getStagePartKey(part)),
+      ) ||
+      new Set(legacyParts.map(getStagePartKey)).size !== legacyParts.length)
+  )
+    throw new Error('Invalid legacy component mapping')
   return {
-    id: manifest.id, name: manifest.name, totalStages, stages: stages.sort((a, b) => a.stage - b.stage), finalAsset: manifest.finalAsset,
-    ...(typeof manifest.description === 'string' && manifest.description.trim() ? { description: manifest.description } : {}),
+    id: manifest.id,
+    name: manifest.name,
+    totalStages,
+    stages: stages.sort((a, b) => a.stage - b.stage),
+    finalAsset: manifest.finalAsset,
+    ...(typeof manifest.description === 'string' && manifest.description.trim()
+      ? { description: manifest.description }
+      : {}),
     ...(legacyParts ? { legacyParts } : {}),
   }
 }
@@ -61,5 +91,9 @@ export function createMechaCatalog(sources: unknown[], defaultId: string): Mecha
   }
   const defaultMecha = registry.get(defaultId)
   if (!defaultMecha) throw new Error('Default mecha manifest is missing')
-  return { defaultMecha, find: (mechaId) => registry.get(mechaId) ?? null, list: () => [...registry.values()] }
+  return {
+    defaultMecha,
+    find: (mechaId) => registry.get(mechaId) ?? null,
+    list: () => [...registry.values()],
+  }
 }

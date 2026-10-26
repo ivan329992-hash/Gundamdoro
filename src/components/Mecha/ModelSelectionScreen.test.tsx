@@ -4,12 +4,31 @@ import type { BuiltMecha } from '../../domain/types'
 import { ModelSelectionScreen } from './ModelSelectionScreen'
 
 const state = vi.hoisted(() => ({ hangar: [] as BuiltMecha[] }))
-vi.mock('../../store/useAppStore', () => ({ useAppStore: (select: (value: typeof state) => unknown) => select(state) }))
-const render = () => renderToStaticMarkup(<ModelSelectionScreen currentMechaId="mecha-01" completed={false} onSelect={() => {}} onClose={() => {}} />)
-const fixed: BuiltMecha = { id: 'fixed', mechaId: 'mecha-02', mechaName: 'MECHA-02', completedAt: 100, completedFocusSessions: 7, totalFocusedMinutes: 175 }
+vi.mock('../../store/useAppStore', () => ({
+  useAppStore: (select: (value: typeof state) => unknown) => select(state),
+}))
+const render = () =>
+  renderToStaticMarkup(
+    <ModelSelectionScreen
+      currentMechaId="mecha-01"
+      completed={false}
+      onSelect={() => {}}
+      onClose={() => {}}
+    />,
+  )
+const fixed: BuiltMecha = {
+  id: 'fixed',
+  mechaId: 'mecha-02',
+  mechaName: 'MECHA-02',
+  completedAt: 100,
+  completedFocusSessions: 7,
+  totalFocusedMinutes: 175,
+}
 
 describe('model selection appearance rewards', () => {
-  beforeEach(() => { state.hangar = [] })
+  beforeEach(() => {
+    state.hangar = []
+  })
 
   it('conceals all uncompleted models while retaining model selection and component counts', () => {
     const html = render()
@@ -29,8 +48,22 @@ describe('model selection appearance rewards', () => {
   })
 
   it('does not reveal models through custom recipes or unavailable archived model IDs', () => {
-    state.hangar = [{ ...fixed, kind: 'custom', composition: { torso: 'mecha-02:torso', head: 'mecha-02:head', 'left-arm': 'mecha-02:left-arm', 'right-arm': 'mecha-02:right-arm', hips: 'mecha-02:hips', 'left-leg': 'mecha-02:left-leg', 'right-leg': 'mecha-02:right-leg' } },
-      { ...fixed, id: 'future', mechaId: 'unavailable-model' }]
+    state.hangar = [
+      {
+        ...fixed,
+        kind: 'custom',
+        composition: {
+          torso: 'mecha-02:torso',
+          head: 'mecha-02:head',
+          'left-arm': 'mecha-02:left-arm',
+          'right-arm': 'mecha-02:right-arm',
+          hips: 'mecha-02:hips',
+          'left-leg': 'mecha-02:left-leg',
+          'right-leg': 'mecha-02:right-leg',
+        },
+      },
+      { ...fixed, id: 'future', mechaId: 'unavailable-model' },
+    ]
     expect(render().match(/class="mecha-image model-silhouette"/g)).toHaveLength(7)
   })
 })

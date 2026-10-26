@@ -17,11 +17,29 @@ export function getDurationMs(minutes: number, millisecondsPerMinute = 60_000): 
 }
 
 export function createInitialTimer(durationMs = DEFAULT_FOCUS_DURATION_MS): TimerState {
-  return { status: 'idle', durationMs, remainingMs: durationMs, startedAt: null, endAt: null, sessionId: null }
+  return {
+    status: 'idle',
+    durationMs,
+    remainingMs: durationMs,
+    startedAt: null,
+    endAt: null,
+    sessionId: null,
+  }
 }
 
-export function createRunningTimer(durationMs: number, now: number, sessionId: string | null): TimerState {
-  return { status: 'running', durationMs, remainingMs: durationMs, startedAt: now, endAt: now + durationMs, sessionId }
+export function createRunningTimer(
+  durationMs: number,
+  now: number,
+  sessionId: string | null,
+): TimerState {
+  return {
+    status: 'running',
+    durationMs,
+    remainingMs: durationMs,
+    startedAt: now,
+    endAt: now + durationMs,
+    sessionId,
+  }
 }
 
 export function getRemainingMs(timer: TimerState, now: number): number {

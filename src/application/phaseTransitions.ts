@@ -21,9 +21,12 @@ export function schedulePhaseCompletion(
   actions: CompletionActions,
   scheduler: SchedulerPort,
 ): () => void {
-  if (phase === 'PART_REWARD') return scheduler.after(PRESENTATION_TIMINGS.partReveal, () => actions.finishPartReveal())
+  if (phase === 'PART_REWARD')
+    return scheduler.after(PRESENTATION_TIMINGS.partReveal, () => actions.finishPartReveal())
   if (phase === 'ASSEMBLY') {
-    const delay = reducedMotion ? PRESENTATION_TIMINGS.reducedAssemblyComplete : PRESENTATION_TIMINGS.assemblyComplete
+    const delay = reducedMotion
+      ? PRESENTATION_TIMINGS.reducedAssemblyComplete
+      : PRESENTATION_TIMINGS.assemblyComplete
     return scheduler.after(delay, () => actions.finishAssemblyAnimation())
   }
   return () => {}

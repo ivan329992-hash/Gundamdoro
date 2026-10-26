@@ -1,0 +1,338 @@
+.focus-part-canvas {
+  height: 300px;
+  overflow: hidden;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #17232d, #0e151c);
+}
+.focus-part-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.focus-part-placeholder {
+  height: 100%;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  color: var(--color-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.focus-part-placeholder strong {
+  color: var(--color-secondary);
+}
+.mecha-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+.parts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.part-slot {
+  min-width: 0;
+  padding: 8px 4px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 10px;
+  background: #0e151c;
+  overflow: hidden;
+}
+.part-slot.is-unlocked {
+  border-color: #45625b;
+}
+.part-slot.is-new {
+  border-color: var(--color-accent);
+  background: #152b26;
+}
+.part-preview {
+  height: 82px;
+  display: grid;
+  place-items: center;
+}
+.part-image {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+.stage-image-group {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.stage-image-group > * {
+  flex: 1;
+  min-width: 0;
+}
+.part-slot strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-secondary);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+.reward-part {
+  color: var(--color-accent);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  margin: 18px 0 24px;
+}
+.asset-error {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  height: 100%;
+  gap: 8px;
+  color: var(--color-error);
+  font-size: 9px;
+}
+.asset-error button {
+  min-height: 28px;
+  width: auto;
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 9px;
+}
+.assembly-shell,
+.complete-shell {
+  padding: 24px;
+}
+.assembly-card,
+.complete-card {
+  width: min(100%, 520px);
+  padding: 28px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: 0 24px 80px #0008;
+  text-align: center;
+}
+.assembly-card h1,
+.complete-card h1 {
+  font-size: 24px;
+  letter-spacing: 0.12em;
+}
+.assembly-canvas {
+  height: clamp(300px, 54vh, 420px);
+  margin-top: 20px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 42%, #293a48, #0d141b 72%);
+}
+.final-mecha {
+  height: 100%;
+}
+.assembly-parts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: center;
+  height: 100%;
+  gap: 12px;
+  padding: 16px;
+}
+.assembly-part-tile {
+  height: 125px;
+  min-width: 0;
+  overflow: hidden;
+}
+.assembly-part {
+  margin: 20px 0 5px;
+  color: var(--color-accent);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+}
+.break-screen {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  background-color: var(--color-background);
+  background-position: center;
+  background-size: cover;
+}
+.break-screen > * {
+  position: relative;
+  z-index: 1;
+}
+.break-ambient-light {
+  position: absolute !important;
+  z-index: 0 !important;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 22% 58%, #57d6a033, transparent 34%),
+    radial-gradient(ellipse at 78% 28%, #ffb36b1c, transparent 30%);
+  mix-blend-mode: screen;
+}
+.break-steam-field {
+  position: absolute !important;
+  z-index: 0 !important;
+  inset: 0;
+  pointer-events: none;
+}
+.break-steam {
+  position: absolute;
+  left: 31%;
+  bottom: 31%;
+  width: 28px;
+  height: 100px;
+  border-radius: 50%;
+  background: #b7d5d633;
+  filter: blur(15px);
+}
+.break-steam:nth-child(2) {
+  left: 35%;
+  bottom: 34%;
+  transform: scale(0.75);
+}
+.break-steam:nth-child(3) {
+  left: 27%;
+  bottom: 32%;
+  transform: scale(0.55);
+}
+.break-card {
+  width: min(100%, 420px);
+  padding: 32px;
+  border: 1px solid #41515d;
+  border-radius: 18px;
+  background: #0b1118d9;
+  box-shadow: 0 24px 80px #000a;
+  text-align: center;
+  backdrop-filter: blur(2px);
+}
+.break-next {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.break-next strong {
+  color: var(--color-accent);
+}
+.break-timer {
+  display: block;
+  margin: 18px 0;
+  font-size: 64px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.complete-canvas {
+  height: clamp(260px, 44vh, 390px);
+  margin: 12px 0 18px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 40%, #293a48, #0d141b 72%);
+}
+.complete-stats {
+  color: var(--color-muted);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.complete-card .secondary-button {
+  margin-top: 12px;
+}
+.saved-to-hangar {
+  margin: 12px 0 0;
+  color: var(--color-accent);
+  font-size: 12px;
+}
+.composite-mecha {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.composite-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.registered-mecha .composite-svg {
+  padding: 6px;
+}
+.assembly-badge {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  color: #8babb8;
+  font: 10px monospace;
+  letter-spacing: 0.12em;
+  z-index: 1;
+}
+.assembly-placeholder {
+  position: absolute;
+  bottom: 20px;
+  left: 16px;
+  right: 16px;
+  text-align: center;
+  color: #8babb8;
+  font-size: 12px;
+}
+.composition-error {
+  position: absolute;
+  inset: auto 8px 8px;
+  padding: 8px;
+  border-radius: 6px;
+  color: #ffb5a6;
+  background: #111820ed;
+  font-size: 10px;
+  text-align: center;
+}
+.composition-error button {
+  min-height: 28px;
+  width: auto;
+  margin: 6px 0 0;
+  padding: 5px 8px;
+  font-size: 10px;
+}
+
+.part-status {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 10px;
+}
+.locked-part {
+  letter-spacing: 0.12em;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+.focus-part-caption {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: var(--color-muted);
+  gap: 12px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.focus-part-caption strong {
+  color: var(--color-secondary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.complete-stats,
+.break-next {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.complete-card .ready-navigation button {
+  margin: 0;
+}
+.break-card h1 {
+  margin: 10px 0 28px;
+  font-size: 32px;
+}

@@ -181,14 +181,24 @@ pub async fn save_user_model(app: tauri::AppHandle, window: tauri::WebviewWindow
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_DIRECTORY_ID: AtomicU64 = AtomicU64::new(0);
     struct TestDirectory(std::path::PathBuf);
     impl TestDirectory {
         fn new() -> Self {
             Self::new_in(&std::env::temp_dir())
         }
         fn new_in(base: &Path) -> Self {
-            let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-            let path = base.join(format!("gundamdoro-model-test-{}-{nonce}", std::process::id()));
+            let nonce = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
+            let sequence = NEXT_DIRECTORY_ID.fetch_add(1, Ordering::Relaxed);
+            let path = base.join(format!(
+                "gundamdoro-model-test-{}-{nonce}-{sequence}",
+                std::process::id()
+            ));
             fs::create_dir(&path).unwrap();
             Self(path)
         }

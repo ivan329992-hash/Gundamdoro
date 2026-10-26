@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createJSONStorage } from 'zustand/middleware'
-import { createInitialTimer } from '../lib/timer'
+import { createInitialTimer } from '../domain/timer'
 import { useAppStore } from './useAppStore'
 import { APP_STORAGE_VERSION } from '../application/snapshot'
 
@@ -10,8 +10,12 @@ const { storageItems, memoryStorage } = vi.hoisted(() => {
   const storageItems = new Map<string, string>()
   const memoryStorage = {
     getItem: (key: string) => storageItems.get(key) ?? null,
-    setItem: (key: string, value: string) => { storageItems.set(key, value) },
-    removeItem: (key: string) => { storageItems.delete(key) },
+    setItem: (key: string, value: string) => {
+      storageItems.set(key, value)
+    },
+    removeItem: (key: string) => {
+      storageItems.delete(key)
+    },
   }
   vi.stubGlobal('localStorage', memoryStorage)
   vi.stubGlobal('window', { localStorage: memoryStorage, location: { search: '' } })
@@ -245,7 +249,16 @@ describe('useAppStore', () => {
   })
 
   it('migrates a waiting paired-leg collection without adding historical focus credit', async () => {
-    const data = { ...snapshot(), assembly: { ...snapshot().assembly, totalStages: 5, currentStage: 5, completedFocusSessions: 5 }, totalFocusedMinutes: 5 }
+    const data = {
+      ...snapshot(),
+      assembly: {
+        ...snapshot().assembly,
+        totalStages: 5,
+        currentStage: 5,
+        completedFocusSessions: 5,
+      },
+      totalFocusedMinutes: 5,
+    }
     await loadSnapshot(data, 5)
     useAppStore.getState().recoverState(999_999)
     expect(useAppStore.getState().phase).toBe('READY')
@@ -311,7 +324,12 @@ describe('useAppStore', () => {
   })
 
   it('migrates a legacy part-assembly snapshot to a reveal without adding progress', async () => {
-    const data = { ...snapshot(), phase: 'ASSEMBLY', assembly: { mechaId: 'mecha-01', currentStage: 3, totalStages: 6, completedFocusSessions: 3 }, totalFocusedMinutes: 75 }
+    const data = {
+      ...snapshot(),
+      phase: 'ASSEMBLY',
+      assembly: { mechaId: 'mecha-01', currentStage: 3, totalStages: 6, completedFocusSessions: 3 },
+      totalFocusedMinutes: 75,
+    }
     await loadSnapshot(data, 0)
     expect(useAppStore.getState().phase).toBe('PART_REWARD')
     expect(useAppStore.getState().assembly).toEqual({ ...data.assembly, totalStages: 7 })
@@ -322,7 +340,20 @@ describe('useAppStore', () => {
   })
 
   it('migrates legacy completion while keeping actual six-session history', async () => {
-    await loadSnapshot({ ...snapshot(), phase: 'COMPLETE', assembly: { mechaId: 'mecha-01', currentStage: 6, totalStages: 6, completedFocusSessions: 6 }, totalFocusedMinutes: 150 }, 0)
+    await loadSnapshot(
+      {
+        ...snapshot(),
+        phase: 'COMPLETE',
+        assembly: {
+          mechaId: 'mecha-01',
+          currentStage: 6,
+          totalStages: 6,
+          completedFocusSessions: 6,
+        },
+        totalFocusedMinutes: 150,
+      },
+      0,
+    )
     expect(useAppStore.getState().phase).toBe('COMPLETE')
     expect(useAppStore.getState().assembly.currentStage).toBe(7)
     expect(useAppStore.getState().assembly.completedFocusSessions).toBe(6)
@@ -331,7 +362,19 @@ describe('useAppStore', () => {
 
   it('converts legacy sixth focus to manual-assembly readiness without extra totals', async () => {
     useAppStore.getState().startFocus(1_000)
-    await loadSnapshot({ ...snapshot(), assembly: { mechaId: 'mecha-01', currentStage: 5, totalStages: 6, completedFocusSessions: 5 }, totalFocusedMinutes: 125 }, 0)
+    await loadSnapshot(
+      {
+        ...snapshot(),
+        assembly: {
+          mechaId: 'mecha-01',
+          currentStage: 5,
+          totalStages: 6,
+          completedFocusSessions: 5,
+        },
+        totalFocusedMinutes: 125,
+      },
+      0,
+    )
     useAppStore.getState().recoverState(1_000_000)
     expect(useAppStore.getState().phase).toBe('READY')
     expect(useAppStore.getState().assembly.currentStage).toBe(7)
@@ -342,7 +385,11 @@ describe('useAppStore', () => {
   it('clamps corrupt part counts and never unlocks manual assembly early', async () => {
     await loadSnapshot({ ...snapshot(), assembly: { ...snapshot().assembly, currentStage: 99 } })
     expect(useAppStore.getState().assembly.currentStage).toBe(7)
-    await loadSnapshot({ ...snapshot(), phase: 'ASSEMBLY', assembly: { ...snapshot().assembly, currentStage: -2 } })
+    await loadSnapshot({
+      ...snapshot(),
+      phase: 'ASSEMBLY',
+      assembly: { ...snapshot().assembly, currentStage: -2 },
+    })
     expect(useAppStore.getState().assembly.currentStage).toBe(0)
     expect(useAppStore.getState().phase).toBe('READY')
   })
@@ -351,7 +398,10 @@ describe('useAppStore', () => {
     finishFocus(1_000)
     useAppStore.getState().updateSettings({ focusMinutes: 40 })
     expect(useAppStore.getState().settings.focusMinutes).toBe(1)
-    useAppStore.setState({ phase: 'READY', assembly: { mechaId: 'mecha-01', currentStage: 7, totalStages: 7, completedFocusSessions: 5 } })
+    useAppStore.setState({
+      phase: 'READY',
+      assembly: { mechaId: 'mecha-01', currentStage: 7, totalStages: 7, completedFocusSessions: 5 },
+    })
     useAppStore.getState().startAssembly()
     useAppStore.getState().updateSettings({ focusMinutes: 40 })
     expect(useAppStore.getState().settings.focusMinutes).toBe(1)
@@ -367,10 +417,16 @@ describe('useAppStore', () => {
     expect(useAppStore.getState().hangar).toEqual([])
     useAppStore.getState().finishAssemblyAnimation(10_000)
     useAppStore.getState().finishAssemblyAnimation(20_000)
-    expect(useAppStore.getState().hangar).toEqual([{
-      id, mechaId: 'mecha-01', mechaName: 'MECHA-01', completedAt: 10_000,
-      completedFocusSessions: 5, totalFocusedMinutes: 125,
-    }])
+    expect(useAppStore.getState().hangar).toEqual([
+      {
+        id,
+        mechaId: 'mecha-01',
+        mechaName: 'MECHA-01',
+        completedAt: 10_000,
+        completedFocusSessions: 5,
+        totalFocusedMinutes: 125,
+      },
+    ])
     useAppStore.getState().resetMecha()
     expect(useAppStore.getState().currentBuildId).toBeNull()
     expect(useAppStore.getState().hangar[0].totalFocusedMinutes).toBe(125)
@@ -383,7 +439,12 @@ describe('useAppStore', () => {
   it('keeps separate instances when the same model is built again', () => {
     for (let build = 1; build <= 2; build++) {
       useAppStore.setState({
-        assembly: { mechaId: 'mecha-01', currentStage: 7, totalStages: 7, completedFocusSessions: 5 },
+        assembly: {
+          mechaId: 'mecha-01',
+          currentStage: 7,
+          totalStages: 7,
+          completedFocusSessions: 5,
+        },
         totalFocusedMinutes: build * 25,
       })
       useAppStore.getState().startAssembly()
@@ -407,7 +468,10 @@ describe('useAppStore', () => {
   })
 
   it('restores a build interrupted during assembly and archives once on completion', async () => {
-    useAppStore.setState({ assembly: { mechaId: 'mecha-01', currentStage: 7, totalStages: 7, completedFocusSessions: 5 }, totalFocusedMinutes: 125 })
+    useAppStore.setState({
+      assembly: { mechaId: 'mecha-01', currentStage: 7, totalStages: 7, completedFocusSessions: 5 },
+      totalFocusedMinutes: 125,
+    })
     useAppStore.getState().startAssembly()
     const id = useAppStore.getState().currentBuildId
     await loadSnapshot(snapshot())
@@ -424,7 +488,12 @@ describe('useAppStore', () => {
   })
 
   it('migrates a version-1 completed mecha into the hangar without inventing a date', async () => {
-    const oldState = { ...snapshot(), phase: 'COMPLETE', assembly: { mechaId: 'mecha-01', currentStage: 5, totalStages: 5, completedFocusSessions: 5 }, totalFocusedMinutes: 125 }
+    const oldState = {
+      ...snapshot(),
+      phase: 'COMPLETE',
+      assembly: { mechaId: 'mecha-01', currentStage: 5, totalStages: 5, completedFocusSessions: 5 },
+      totalFocusedMinutes: 125,
+    }
     await loadSnapshot(oldState, 1)
     expect(useAppStore.getState().phase).toBe('COMPLETE')
     expect(useAppStore.getState().hangar).toHaveLength(1)
@@ -440,7 +509,20 @@ describe('useAppStore', () => {
   })
 
   it('preserves a version-1 manual assembly during migration', async () => {
-    await loadSnapshot({ ...snapshot(), phase: 'ASSEMBLY', assembly: { mechaId: 'mecha-01', currentStage: 5, totalStages: 5, completedFocusSessions: 5 }, totalFocusedMinutes: 125 }, 1)
+    await loadSnapshot(
+      {
+        ...snapshot(),
+        phase: 'ASSEMBLY',
+        assembly: {
+          mechaId: 'mecha-01',
+          currentStage: 5,
+          totalStages: 5,
+          completedFocusSessions: 5,
+        },
+        totalFocusedMinutes: 125,
+      },
+      1,
+    )
     expect(useAppStore.getState().phase).toBe('ASSEMBLY')
     expect(useAppStore.getState().hangar).toHaveLength(0)
     expect(useAppStore.getState().currentBuildId).toBeTruthy()
@@ -450,15 +532,49 @@ describe('useAppStore', () => {
   })
 
   it('preserves archives when a corrupt active timer falls back to READY', async () => {
-    const entry = { id: 'saved-build', mechaId: 'mecha-01', mechaName: 'MECHA-01', completedAt: 10_000, completedFocusSessions: 5, totalFocusedMinutes: 125 }
-    await loadSnapshot({ ...snapshot(), phase: 'FOCUS', timer: { status: 'running', endAt: null }, hangar: [entry] })
+    const entry = {
+      id: 'saved-build',
+      mechaId: 'mecha-01',
+      mechaName: 'MECHA-01',
+      completedAt: 10_000,
+      completedFocusSessions: 5,
+      totalFocusedMinutes: 125,
+    }
+    await loadSnapshot({
+      ...snapshot(),
+      phase: 'FOCUS',
+      timer: { status: 'running', endAt: null },
+      hangar: [entry],
+    })
     expect(useAppStore.getState().phase).toBe('READY')
     expect(useAppStore.getState().hangar).toEqual([entry])
   })
 
   it('keeps unknown model records and normalizes malformed hangar data safely', async () => {
-    const future = { id: 'future-build', mechaId: 'mecha-future', mechaName: 'FUTURE MODEL', completedAt: 20_000, completedFocusSessions: 7, totalFocusedMinutes: 175 }
-    await loadSnapshot({ ...snapshot(), hangar: [null, {}, future, future, { id: 'bad-stats', mechaId: 'mecha-01', completedAt: Infinity, completedFocusSessions: -1, totalFocusedMinutes: -10 }] })
+    const future = {
+      id: 'future-build',
+      mechaId: 'mecha-future',
+      mechaName: 'FUTURE MODEL',
+      completedAt: 20_000,
+      completedFocusSessions: 7,
+      totalFocusedMinutes: 175,
+    }
+    await loadSnapshot({
+      ...snapshot(),
+      hangar: [
+        null,
+        {},
+        future,
+        future,
+        {
+          id: 'bad-stats',
+          mechaId: 'mecha-01',
+          completedAt: Infinity,
+          completedFocusSessions: -1,
+          totalFocusedMinutes: -10,
+        },
+      ],
+    })
     const entries = useAppStore.getState().hangar
     expect(entries).toHaveLength(2)
     expect(entries[0]).toEqual(future)

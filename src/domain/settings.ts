@@ -9,7 +9,10 @@ export function normalizeSettings(value: Partial<Settings>, fallback = DEFAULT_S
     ...fallback,
     focusMinutes: clampInteger(value.focusMinutes, fallback.focusMinutes, 1, 120),
     breakMinutes: clampInteger(value.breakMinutes, fallback.breakMinutes, 1, 60),
-    ...Object.fromEntries((['soundEnabled', 'notificationsEnabled', 'miniTimerEnabled'] as const)
-      .filter((key) => typeof value[key] === 'boolean').map((key) => [key, value[key]])),
+    ...Object.fromEntries(
+      (['soundEnabled', 'notificationsEnabled', 'miniTimerEnabled'] as const)
+        .filter((key) => typeof value[key] === 'boolean')
+        .map((key) => [key, value[key]]),
+    ),
   }
 }

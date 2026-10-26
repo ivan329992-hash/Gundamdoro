@@ -14,15 +14,20 @@ export function AssemblyProgress({ currentStage, mechaId }: AssemblyProgressProp
   return (
     <div className="assembly-progress">
       <div className="progress-heading">
-        <span>PARTS COLLECTED</span>
-        <strong>{safeStage} / {manifest.totalStages}</strong>
+        <span>已收集配件</span>
+        <strong>
+          {safeStage} / {manifest.totalStages}
+        </strong>
       </div>
       <div className="progress-track" aria-hidden="true">
-        <div className="progress-fill" style={{ width: `${(safeStage / manifest.totalStages) * 100}%` }} />
+        <div
+          className="progress-fill"
+          style={{ width: `${(safeStage / manifest.totalStages) * 100}%` }}
+        />
       </div>
       <div className="next-part">
-        <span>NEXT PART</span>
-        <strong>{nextStage?.name ?? 'READY TO ASSEMBLE'}</strong>
+        <span>下一配件</span>
+        <strong>{nextStage?.name ?? '已集齐，可开始拼装'}</strong>
       </div>
     </div>
   )

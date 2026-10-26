@@ -10,6 +10,23 @@ export function EstimatedEnd({ timer }: { timer: TimerState }) {
     return () => window.clearInterval(id)
   }, [])
   const endAt = estimatedEndAt(timer, now)
-  return <p className="estimated-end">{endAt === null ? '已暂停 · 继续后更新结束时间'
-    : <>预计 <time dateTime={new Date(endAt).toISOString()}>{new Date(endAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</time> 结束</>}</p>
+  return (
+    <p className="estimated-end">
+      {endAt === null ? (
+        '已暂停 · 继续后更新结束时间'
+      ) : (
+        <>
+          预计{' '}
+          <time dateTime={new Date(endAt).toISOString()}>
+            {new Date(endAt).toLocaleTimeString('zh-CN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            })}
+          </time>{' '}
+          结束
+        </>
+      )}
+    </p>
+  )
 }

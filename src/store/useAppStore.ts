@@ -2,6 +2,4 @@
 import { appDependencies } from '../app/dependencies'
 import { createAppStore } from './createAppStore'
 
-export type { AppPhase, AppState } from '../domain/types'
-
 export const useAppStore = createAppStore(appDependencies)

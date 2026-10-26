@@ -1,7 +1,7 @@
 /** 【屏】休息倒计时 + 下一零件提示；到期 syncTimer→completeBreak。 */
 import { motion, useReducedMotion } from 'framer-motion'
 import { getBreakAsset, getMechaManifest, getNextStageDefinition } from '../../mecha/loader'
-import { formatTime } from '../../lib/timer'
+import { formatTime } from '../../domain/timer'
 import { useAppStore } from '../../store/useAppStore'
 import { EstimatedEnd } from '../Timer/EstimatedEnd'
 
@@ -16,7 +16,10 @@ export function BreakScreen({ onAbandonBuild }: { onAbandonBuild?: () => void })
   const reduceMotion = useReducedMotion()
 
   return (
-    <main className="break-screen" style={breakAsset ? { backgroundImage: `url(${breakAsset})` } : undefined}>
+    <main
+      className="break-screen"
+      style={breakAsset ? { backgroundImage: `url(${breakAsset})` } : undefined}
+    >
       <motion.div
         className="break-ambient-light"
         aria-hidden="true"
@@ -28,20 +31,39 @@ export function BreakScreen({ onAbandonBuild }: { onAbandonBuild?: () => void })
           <motion.span
             className="break-steam"
             key={index}
-            animate={reduceMotion ? { opacity: 0 } : { opacity: [0, 0.2, 0], y: [18, -42], x: [0, index % 2 === 0 ? 8 : -8] }}
-            transition={{ duration: 5 + index, delay: index * 1.4, repeat: Infinity, ease: 'easeOut' }}
+            animate={
+              reduceMotion
+                ? { opacity: 0 }
+                : { opacity: [0, 0.2, 0], y: [18, -42], x: [0, index % 2 === 0 ? 8 : -8] }
+            }
+            transition={{
+              duration: 5 + index,
+              delay: index * 1.4,
+              repeat: Infinity,
+              ease: 'easeOut',
+            }}
           />
         ))}
       </div>
       <section className="break-card" aria-labelledby="break-title">
         <p className="eyebrow">{manifest.name} / RECOVERY BAY</p>
-        <h1 id="break-title">BREAK</h1>
-        <p className="break-next">NEXT PART <strong>{nextStage?.name ?? 'MECHA COMPLETE'}</strong></p>
-        <strong className="break-timer" aria-live="polite">{formatTime(timer.remainingMs)}</strong>
+        <h1 id="break-title">休息时间</h1>
+        <p className="break-next">
+          下一配件 <strong>{nextStage?.name ?? '机体已完成'}</strong>
+        </p>
+        <strong className="break-timer" aria-live="polite">
+          {formatTime(timer.remainingMs)}
+        </strong>
         <EstimatedEnd timer={timer} />
-        <p className="bootstrap-note">Take a short recovery break.</p>
-        <button type="button" className="secondary-button" onClick={endBreak}>结束休息</button>
-        {onAbandonBuild && <button type="button" className="secondary-button" onClick={onAbandonBuild}>放弃制作并换机型</button>}
+        <p className="bootstrap-note">补充能量，准备下一次专注。</p>
+        <button type="button" className="secondary-button" onClick={endBreak}>
+          结束休息
+        </button>
+        {onAbandonBuild && (
+          <button type="button" className="secondary-button" onClick={onAbandonBuild}>
+            放弃制作并换机型
+          </button>
+        )}
       </section>
     </main>
   )

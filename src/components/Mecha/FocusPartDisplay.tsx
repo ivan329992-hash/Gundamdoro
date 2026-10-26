@@ -15,7 +15,12 @@ export function FocusPartDisplay({ currentStage, mechaId }: FocusPartDisplayProp
     <div className="focus-part-display" aria-label={`${manifest.name} focus part preview`}>
       <div className="focus-part-canvas">
         {part ? (
-          <StageImage key={`${manifest.id}:${part.stage}`} mechaId={manifest.id} stage={part.stage} className="focus-part-image" />
+          <StageImage
+            key={`${manifest.id}:${part.stage}`}
+            mechaId={manifest.id}
+            stage={part.stage}
+            className="focus-part-image"
+          />
         ) : (
           <div className="focus-part-placeholder">
             <span>COLLECTION BAY</span>

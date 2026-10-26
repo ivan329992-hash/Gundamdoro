@@ -1,6 +1,6 @@
-/** 【Hook】FOCUS/BREAK 运行时每 250ms syncTimer；到期由 useCases 完成，UI 不改 phase。 */
+/** 刷新运行中的计时，并在页面恢复时立即校时；阶段转换由 store 动作处理。 */
 import { useEffect } from 'react'
-import { appScheduler } from '../app/dependencies'
+import { appScheduler, appTimerWake } from '../app/dependencies'
 import { useAppStore } from '../store/useAppStore'
 
 export function useTimerTick(intervalMs = 250): void {
@@ -14,6 +14,11 @@ export function useTimerTick(intervalMs = 250): void {
     }
 
     syncTimer()
-    return appScheduler.every(intervalMs, () => syncTimer())
+    const stopTick = appScheduler.every(intervalMs, () => syncTimer())
+    const stopWake = appTimerWake(() => syncTimer())
+    return () => {
+      stopTick()
+      stopWake()
+    }
   }, [intervalMs, phase, status, syncTimer])
 }

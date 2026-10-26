@@ -24,7 +24,7 @@ READY → FOCUS → PART_REWARD
 
 休息结束不会自动开始下一次专注，提前点击“结束休息”也不会影响已收集配件。固定机体最终拼装和自定义保存均不会额外增加专注次数或分钟数。
 
-“取消本次”只停止当前专注、保留本轮收集进度；“放弃制作”确认后清空本轮进度并允许重新选型，但保留永久配件、成品仓库、设置和自定义草稿。“BUILD AGAIN”开始同机型的新一轮收集，历史成品不受影响。
+“取消本次”只停止当前专注、保留本轮收集进度；“放弃制作”确认后清空本轮进度并允许重新选型，但保留永久配件、成品仓库、设置和自定义草稿。“再次制作”开始同机型的新一轮收集，历史成品不受影响。
 
 未完成机型在选择页显示轮廓与问号；完成该固定机型并入库后，才揭示完整预览。拥有配件或保存混搭机体不会提前揭示来源机型。
 
@@ -49,6 +49,8 @@ READY → FOCUS → PART_REWARD
 七个身体槽位必须齐全，背包／翅膀可为空；当前独立可选背包只有 `wing-zero-ew:wings`，未解锁时不能装备。部分机型的紧凑背包或武装仍随躯干移动，不是独立槽位配件。
 
 保存不消耗配件，同一草稿重复保存不会重复入库；修改名称或配方后生成新的草稿身份。自定义卡片只显示成品与摘要，完整配件来源保留在详情中。
+
+名称最多 40 个 Unicode 字符，输入与存档恢复使用相同的计数规则。窄窗口保留紧凑预览和部位选择，可点击“放大预览”查看整机；底部操作栏会按实际高度给页面留出空间。
 
 ### 添加自己的机型
 
@@ -76,7 +78,7 @@ Windows 将素材复制到应用本地数据目录下的 `user-models/`，移动
 
 ### 浏览器开发预览
 
-准备 Node.js 24.x 和 npm；也支持 22.12+ 的 Node.js 22.x。当前 Vitest 5 的版本要求高于单独运行 Vite 的最低要求，依赖安装以仓库锁文件为准。
+准备 Node.js 24.x 和 npm；也支持 22.13+ 的 Node.js 22.x。代码检查工具的版本要求高于单独运行 Vite 的最低要求，依赖安装以仓库锁文件为准。
 
 ```powershell
 git clone https://github.com/ivan329992-hash/Gundamdoro.git
@@ -104,12 +106,16 @@ Tauri 会自动启动 Vite，不要同时在另一个终端重复运行 `npm run
 ### 测试与打包
 
 ```powershell
+npm run lint
+npm run format:check
 npm test
 npm run build
 npx tauri build --bundles msi
 ```
 
 `npm test` 运行逻辑、存档、模块边界、资源及组件回归测试；`npm run build` 先执行 TypeScript 项目检查，再生成 `dist/`。Windows MSI 默认输出到 `src-tauri/target/release/bundle/msi/`；不指定 `--bundles msi` 时按 Tauri 配置构建所有配置的安装包类型。
+
+`npm run lint` 检查源码及测试中的常见错误和未使用变量；`npm run format:check` 检查统一格式，`npm run format` 自动整理 TypeScript、TSX、CSS、测试与根目录配置文件。素材、机型 JSON、Rust 和本地文档不在该格式化命令的范围内。
 
 只检查类型可运行 `npx tsc -b`。构建后的网页可用 `npm run preview` 预览，具体地址以终端输出为准。
 
@@ -133,7 +139,7 @@ npx tauri build --bundles msi
 Gundamdoro/
 ├─ src/
 │  ├─ main.tsx                  # 启动、存档恢复与主/迷你/校准入口分流
-│  ├─ app/                      # 根界面、依赖装配、功能开关
+│  ├─ app/                      # 根界面与依赖装配
 │  ├─ components/               # React 展示与交互
 │  │  ├─ Mecha/                 # 选型、机型导入、配件展示、奖励、拼装与渲染器
 │  │  ├─ Timer/                 # 预计结束时间、提醒协调与迷你计时器
@@ -142,8 +148,9 @@ Gundamdoro/
 │  │  ├─ Break/                 # 休息页面
 │  │  ├─ Complete/              # 完成页面
 │  │  ├─ Settings/              # 设置弹窗
-│  │  └─ Startup/               # 启动错误与重试界面
-│  ├─ hooks/                    # 计时刷新、阶段完成调度
+│  │  ├─ Startup/               # 启动重试、运行期保存失败与重试提示
+│  │  └─ shared/                # 共用原生模态框
+│  ├─ hooks/                    # 计时刷新、阶段完成调度、固定栏空间测量
 │  ├─ store/                    # Zustand 门面、工厂、动作映射与存档接入
 │  ├─ application/              # 用例、端口、快照迁移、计时投影
 │  ├─ domain/                   # 纯业务规则、类型、目录与二维变换数学
@@ -156,8 +163,7 @@ Gundamdoro/
 │  ├─ assets/mecha/             # 本地 PNG、拼装母图与素材来源说明
 │  ├─ dev/                      # 仅开发模式的拼装校准工具
 │  ├─ test/                     # 测试替身与辅助数据
-│  ├─ lib/                      # 兼容性工具入口
-│  └─ styles/                   # 全局样式与响应式布局
+│  └─ styles/                   # 基础样式、设计变量和分界面的响应式布局
 ├─ src-tauri/
 │  ├─ src/                      # Rust 桌面启动、生命周期与本地机型文件命令
 │  ├─ capabilities/             # 窗口与通知权限
@@ -166,7 +172,11 @@ Gundamdoro/
 │  └─ tauri.conf.json           # 窗口、开发地址、打包配置
 ├─ tests/                       # 模块边界与素材完整性测试
 ├─ public/                      # 网站图标等静态资源
-├─ docs/                        # 架构、素材制作与分功能验收记录
+├─ docs/                        # 仅本地文档，不随 Git 分发；入口 docs/README.md
+│  ├─ architecture/             # 架构与模块边界
+│  ├─ design/                   # 机型设计记录
+│  ├─ assets/                   # 素材来源与制作记录
+│  └─ qa/                       # 分功能历史验收记录
 ├─ SPEC.md                      # 需求与已批准变更
 ├─ AGENTS.md                    # 仓库开发约束
 ├─ package.json / package-lock.json
@@ -210,11 +220,11 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 | 仓库分组与机体故事 | [hangar.ts](src/domain/hangar.ts)、[profiles.ts](src/mecha/profiles.ts) |
 | 预计结束、完成提醒和桌面迷你窗口 | [timerExperience.ts](src/application/timerExperience.ts)、[reminders.ts](src/adapters/platform/reminders.ts)、[miniWindow.ts](src/adapters/platform/miniWindow.ts) |
 
-`useAppStore.ts` 是默认状态门面；未使用的 `useTimerStore.ts` 旧别名已移除。`mecha/loader.ts` 和 `lib/timer.ts` 仍保留正在使用的兼容入口。
+`useAppStore.ts` 是默认状态门面；计时函数与共享类型直接从 `domain/timer.ts`、`domain/types.ts` 引入，不再经过旧转发入口。`mecha/loader.ts` 保留模型与图片查询职责；自定义拼装已正式开放，不再使用恒开启的临时功能开关。
 
 ### 计时与窗口协作
 
-计时以 `endAt` 时间戳为准，而不是逐秒递减；刷新或重启后重新计算剩余时间。专注完成按 `sessionId` 幂等处理，同一会话不能重复发放配件。
+计时以 `endAt` 时间戳为准，而不是逐秒递减；刷新或重启后重新计算剩余时间。窗口重新获得焦点、页面恢复或重新可见时会立即校时，不依赖后台定时器准点执行。专注完成按 `sessionId` 幂等处理，同一会话不能重复发放配件；暂停时长不会因时间跨越而继续减少。
 
 主窗口是唯一业务状态与存档写入者。原生迷你窗口只接收计时投影并发送暂停/继续、同步请求，不水合第二份 store，不独立发奖励或提示；关闭整个应用后不会继续发送提醒。
 
@@ -224,7 +234,7 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 
 当前新配方记录 `assemblyProfile: standard-front-v4`。身体几何来自 `registered-assembly-v3.json`，背部关节与翅膀来自 `registered-backpack.json`；v1/v2/v3 注册布局继续保留。2026-10-15 按用户确认移除了不带 profile 的旧渲染器及旧布局文件：这类历史配方记录不删除，但显示“旧版装配已停用”。
 
-`presentation.json` 控制固定配件的展示裁切，腰胯与独立腿部复用拼装母图遮罩；不是所有配件都对应一张新 PNG。详细边界见 [架构文档](docs/architecture.md)。
+`presentation.json` 控制固定配件的展示裁切，腰胯与独立腿部复用拼装母图遮罩；不是所有配件都对应一张新 PNG。模块边界见 [工程约束](AGENTS.md#quality-rules)。
 
 ## 本地数据与兼容性
 
@@ -233,6 +243,8 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 启动顺序为“加载用户机型资源 → 读取与校验进度 → 迁移 → 恢复过期计时 → 渲染正常界面”。支持版本 0–7 迁移，旧版已获得的双腿组件会按模型迁移规则展开为腰胯和两条腿，不凭空增加真实专注统计；历史配方与有效的未知引用保留。
 
 无法读取、解析存档，版本过新或当前活动模型不可用时，显示重试界面而不拿默认值覆盖原存档；启动恢复写入失败也会阻止进入正常界面。先检查存储权限、应用版本与资源，再选择“重新读取存档”，不要直接清除数据。
+
+运行期间写入失败会保留当前窗口内的进度，并显示“进度尚未保存到本机”和重试入口；完成页与拼装页也不会误报保存成功。检查空间或存储权限后点击“重试保存”，成功前请勿关闭或刷新。运行期保存状态不加入版本 8 的十个存档字段，异步存储按顺序写入，避免旧快照覆盖新进度。
 
 网页存档随浏览器、用户配置和站点 origin 隔离，换端口、协议或使用桌面版都不会自动搬迁。当前没有存档导出/导入或云端备份界面，清理站点数据可能丢失本地进度。
 
@@ -253,25 +265,22 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 | 文档 | 内容 |
 | --- | --- |
 | [SPEC.md](SPEC.md) / [AGENTS.md](AGENTS.md) | 需求、已批准变更与工程约束；早期五组件和禁止导入描述以第 26、31–34 节为准 |
-| [architecture.md](docs/architecture.md) | 分层依赖、端口、存档、拼装版本与扩展约束 |
-| [assembly-artwork.md](docs/assembly-artwork.md) / [assembly-artwork-all-models.md](docs/assembly-artwork-all-models.md) | 拼装母图的来源与生成记录 |
-| [qa-all-model-assembly.md](docs/qa-all-model-assembly.md) / [qa-optional-backpack.md](docs/qa-optional-backpack.md) | 七机型、腰腿拆分、混搭和可选翅膀验收 |
-| [qa-workbench-save-visibility.md](docs/qa-workbench-save-visibility.md) / [qa-model-reveal-and-hangar-summary.md](docs/qa-model-reveal-and-hangar-summary.md) | 保存入口、机型轮廓和仓库摘要验收 |
-| [qa-daily-timer.md](docs/qa-daily-timer.md) / [qa-startup-storage.md](docs/qa-startup-storage.md) | 日常计时、桌面窗口和启动存档验收 |
-| [qa-user-model-import.md](docs/qa-user-model-import.md) | 用户机型导入、文件库提交与收集流程验收 |
+| [拼装素材来源](src/assets/mecha/ASSEMBLY_SOURCES.md) | 母图来源与非官方素材边界，不含完整制作提示词 |
 
-`docs/qa-*.md` 是各功能当时的验收记录，包含历史组件数、版本和测试数量，不应当作当前版本配置。
+详细架构、机型设计、制作提示词和历史验收记录仅保存在本地 `docs/`，入口为 `docs/README.md`；该目录已加入忽略规则，不随 Git 分发，也不是运行或构建的依赖。新克隆的项目不会包含这些文件，需要自行备份和恢复。历史验收记录中的组件数、版本和测试数量不应当作当前版本配置。
+
+取消跟踪不会清除已提交的历史文档；远端最新版中的移除也需要后续提交并推送后才生效。
 
 ## 素材来源与许可证
 
 仓库包含六套原创生成机型，以及用户明确要求纳入的“飞翼零式 EW”生成同人素材。内置素材在构建时本地打包，用户导入素材存入本地资源库；不下载官方图片，也不依赖远程字体或 CDN。
 
-项目附带 [Apache License 2.0](LICENSE)。代码许可证不代表获得飞翼零式角色、名称或同人图的商业使用授权；非官方来源及边界见 [飞翼零式素材说明](src/assets/mecha/wing-zero-ew/ASSETS.md) 和 [全机型拼装母图记录](docs/assembly-artwork-all-models.md)，应保留这些说明。
+项目附带 [Apache License 2.0](LICENSE)。代码许可证不代表获得飞翼零式角色、名称或同人图的商业使用授权；非官方来源及边界见 [飞翼零式素材说明](src/assets/mecha/wing-zero-ew/ASSETS.md) 和 [拼装素材来源](src/assets/mecha/ASSEMBLY_SOURCES.md)，应保留这些说明。
 
 机体详情中的能力指数与背景故事属于应用内设定；飞翼零式相关内容明确为非官方解读，不是官方参数或授权设定。
 
 ## 已知边界
 
-系统通知默认关闭，需要用户开启并授予权限；实际提醒还受操作系统通知设置和勿扰模式影响。提示音依赖交互解锁，整个应用关闭或系统休眠期间不保证提醒投递。
+系统通知默认关闭，需要用户开启并授予权限；实际提醒还受操作系统通知设置和勿扰模式影响。权限不可用或发送失败时会提示错误，不回滚已经获得的配件，也不会在专注完成时自动申请权限；后续发送成功会清除旧通知错误。提示音依赖交互解锁，整个应用关闭或系统休眠期间不保证提醒投递，原生发送命令成功也不等于系统一定展示通知。
 
 自定义拼装是二维静态模块组合，不是 3D 或骨骼动画；部分生成素材边缘仍可能有细小残留，正式宣传图需额外检查。联网、多设备同步、移动端和更多独立装备类型仍需另行设计与开发。

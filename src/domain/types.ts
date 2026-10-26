@@ -8,7 +8,8 @@ export type LegacyPartSlot = 'torso' | 'head' | 'left-arm' | 'right-arm' | 'legs
 export type ModularPartSlot = Exclude<LegacyPartSlot, 'legs'> | 'hips' | 'left-leg' | 'right-leg'
 export type PartSlot = LegacyPartSlot | ModularPartSlot | 'wings'
 export type DraftComposition = Partial<Record<PartSlot, string>>
-export type Composition = DraftComposition & (Record<LegacyPartSlot, string> | Record<ModularPartSlot, string>)
+export type Composition = DraftComposition &
+  (Record<LegacyPartSlot, string> | Record<ModularPartSlot, string>)
 
 export interface WorkbenchDraft {
   id: string | null
@@ -85,6 +86,7 @@ export interface AppData {
 }
 
 export interface AppActions {
+  retryPersistence: () => void
   importModel: (draft: UserModelDraft) => Promise<string>
   selectMecha: (mechaId: string) => void
   startFocus: (now?: number) => void
@@ -110,4 +112,7 @@ export interface AppActions {
   saveCustomBuild: () => void
 }
 
-export type AppState = AppData & AppActions
+export type PersistenceStatus = 'saved' | 'saving' | 'error'
+
+/** 保存状态只存在于运行期，不加入进度快照。 */
+export type AppState = AppData & AppActions & { persistenceStatus: PersistenceStatus }

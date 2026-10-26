@@ -828,7 +828,7 @@ Move snapshot normalization/migration out of the store. The storage contract per
 
 The app-level coordinator schedules the existing part-reveal and final-assembly completion actions. Screens handle presentation; image reveal stays at 2200ms (400ms reduced motion), part reveal at 2800ms, and final completion at 4800ms (1400ms reduced motion).
 
-Regression acceptance includes the existing tests, pure use cases with injected non-default model/time/IDs, synchronous and asynchronous storage restoration, dependency-boundary checks, browser completion/restart flows and the frontend/desktop production builds. See `docs/architecture.md` for dependency and extension rules.
+Regression acceptance includes the existing tests, pure use cases with injected non-default model/time/IDs, synchronous and asynchronous storage restoration, dependency-boundary checks, browser completion/restart flows and the frontend/desktop production builds. See AGENTS.md for dependency and extension rules. Detailed notes under `docs/` are local-only and are not required to build or develop a fresh checkout.
 
 ## 23. Approved extension — Multiple buildable models
 

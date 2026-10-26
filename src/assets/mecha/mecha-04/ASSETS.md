@@ -20,14 +20,14 @@ Shared suffix: Keep this exact robot's geometry, panel seams, colors, surface fi
 
 ## Source image
 
-`final/assembled.png` was copied from `exec-0a2c8baf-370c-4176-a622-c4f49126531a.png`. Official product reference URLs and design directions are recorded in `docs/design-four-models.md`; no official image was added to the runtime assets.
+`final/assembled.png` was copied from `exec-0a2c8baf-370c-4176-a622-c4f49126531a.png`. Official product pages informed design directions only; no official image was added to the runtime assets. Detailed design references and prompts are local-only and are not distributed with this repository.
 
 ## Generated part sources
 
 <!-- generated-part-sources -->
-- `parts/torso-v3.png`: `exec-227b446f-8e56-4309-8c6b-d8cd308e9b4b.png` (waist refinement prompt in `docs/design-four-models-resume.md`)
-- `source/torso-v2.png`: `exec-ac7d2974-9d68-4ccb-b40e-3196288d31df.png` (resume prompt in `docs/design-four-models-resume.md`)
-- `parts/leg-unit.png`: `exec-253f17f4-b75a-4458-aa1d-a493dc193ae9.png` (resume prompt in `docs/design-four-models-resume.md`)
+- `parts/torso-v3.png`: `exec-227b446f-8e56-4309-8c6b-d8cd308e9b4b.png` (local-only refinement prompt)
+- `source/torso-v2.png`: `exec-ac7d2974-9d68-4ccb-b40e-3196288d31df.png` (local-only refinement prompt)
+- `parts/leg-unit.png`: `exec-253f17f4-b75a-4458-aa1d-a493dc193ae9.png` (local-only refinement prompt)
 - `parts/right-arm.png`: `exec-4981b004-b6d2-452b-bf89-e5c8d08aad75.png`
 - `parts/left-arm.png`: `exec-94290a90-cbff-432e-88cb-051e02f8ae54.png`
 - `parts/head.png`: `exec-032c18de-3bff-4da9-ab57-839438b84376.png`

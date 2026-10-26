@@ -4,9 +4,14 @@ import type { SchedulerPort } from './ports'
 
 function fakeScheduler() {
   let callback: (() => void) | undefined
-  const cancel = vi.fn(() => { callback = undefined })
+  const cancel = vi.fn(() => {
+    callback = undefined
+  })
   const scheduler: SchedulerPort = {
-    after: vi.fn((_delay, next) => { callback = next; return cancel }),
+    after: vi.fn((_delay, next) => {
+      callback = next
+      return cancel
+    }),
     every: vi.fn(() => cancel),
   }
   return { scheduler, cancel, fire: () => callback?.() }
@@ -24,15 +29,21 @@ describe('phase completion coordination', () => {
     expect(fake.cancel).toHaveBeenCalledOnce()
   })
 
-  it.each([[false, 4800], [true, 1400]] as const)('keeps manual assembly completion with reduced motion %s at %i ms', (reduced, delay) => {
-    const fake = fakeScheduler()
-    const actions = { finishPartReveal: vi.fn(), finishAssemblyAnimation: vi.fn() }
-    schedulePhaseCompletion('ASSEMBLY', reduced, actions, fake.scheduler)
-    expect(fake.scheduler.after).toHaveBeenCalledWith(delay, expect.any(Function))
-    fake.fire()
-    expect(actions.finishAssemblyAnimation).toHaveBeenCalledOnce()
-    expect(actions.finishPartReveal).not.toHaveBeenCalled()
-  })
+  it.each([
+    [false, 4800],
+    [true, 1400],
+  ] as const)(
+    'keeps manual assembly completion with reduced motion %s at %i ms',
+    (reduced, delay) => {
+      const fake = fakeScheduler()
+      const actions = { finishPartReveal: vi.fn(), finishAssemblyAnimation: vi.fn() }
+      schedulePhaseCompletion('ASSEMBLY', reduced, actions, fake.scheduler)
+      expect(fake.scheduler.after).toHaveBeenCalledWith(delay, expect.any(Function))
+      fake.fire()
+      expect(actions.finishAssemblyAnimation).toHaveBeenCalledOnce()
+      expect(actions.finishPartReveal).not.toHaveBeenCalled()
+    },
+  )
 
   it('cancels callbacks when the coordinator is disposed', () => {
     const fake = fakeScheduler()

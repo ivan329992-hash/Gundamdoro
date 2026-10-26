@@ -80,7 +80,7 @@ At the end of each phase:
 
 Keep implementations small and readable. Prefer straightforward code over architecture for architecture's sake.
 
-Follow the module boundaries in [docs/architecture.md](./docs/architecture.md). Domain and application code must not import UI, Zustand, adapters, Vite or browser APIs; inject runtime/catalog capabilities through ports. Keep the existing store facade and persistence compatibility when extending functionality.
+Follow the dependency direction: UI/hooks -> store facade -> application use cases -> domain rules. Domain and application code must not import UI, Zustand, adapters, Vite or browser APIs; inject runtime/catalog capabilities through ports. Bind concrete implementations in the app composition root. Keep the existing store facade and persistence compatibility when extending functionality. Detailed architecture/design/QA notes under `docs/` are optional local-only references, not required checkout files; do not add them to Git.
 
 ## Asset rules
 

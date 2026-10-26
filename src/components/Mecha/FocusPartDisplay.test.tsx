@@ -12,12 +12,15 @@ describe('focus target preview', () => {
     [4, 'HIP UNIT'],
     [5, 'LEFT LEG'],
     [6, 'RIGHT LEG'],
-  ] as const)('with %i collected parts previews %s for the current focus', (currentStage, target) => {
-    const html = renderToStaticMarkup(<FocusPartDisplay currentStage={currentStage} />)
-    expect(html).toContain(currentStage < 4 ? `alt="${target}"` : `aria-label="${target}"`)
-    expect(html).toContain('FOCUS TARGET')
-    expect(html).not.toContain('focus-part-placeholder')
-  })
+  ] as const)(
+    'with %i collected parts previews %s for the current focus',
+    (currentStage, target) => {
+      const html = renderToStaticMarkup(<FocusPartDisplay currentStage={currentStage} />)
+      expect(html).toContain(currentStage < 4 ? `alt="${target}"` : `aria-label="${target}"`)
+      expect(html).toContain('FOCUS TARGET')
+      expect(html).not.toContain('focus-part-placeholder')
+    },
+  )
 
   it('does not show the previously earned left arm during the fourth focus', () => {
     const html = renderToStaticMarkup(<FocusPartDisplay currentStage={3} />)
@@ -32,7 +35,9 @@ describe('focus target preview', () => {
   })
 
   it.each([0, 1, 2, 3, 4, 5, 6])('uses the selected model for focus target %i', (currentStage) => {
-    const html = renderToStaticMarkup(<FocusPartDisplay mechaId="mecha-02" currentStage={currentStage} />)
+    const html = renderToStaticMarkup(
+      <FocusPartDisplay mechaId="mecha-02" currentStage={currentStage} />,
+    )
     expect(html).toContain('MECHA-02 focus part preview')
     expect(html).toContain(getStageAsset(currentStage + 1, 'mecha-02')!)
     expect(html).not.toContain(getStageAsset(currentStage + 1, 'mecha-01')!)

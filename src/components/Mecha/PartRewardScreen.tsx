@@ -12,11 +12,17 @@ export function PartRewardScreen() {
   return (
     <main className="app-shell reward-shell">
       <section className="hero-card reward-card" aria-labelledby="reward-title">
-        <p className="phase-label">{manifest.name} / {currentStage} OF {manifest.totalStages}</p>
+        <p className="phase-label">
+          {manifest.name} / {currentStage} OF {manifest.totalStages}
+        </p>
         <h1 id="reward-title">PART SECURED</h1>
         <p className="reward-part">{part?.name}</p>
         <MechaDisplay mechaId={mechaId} currentStage={currentStage} highlightStage={currentStage} />
-        <p className="bootstrap-note">{currentStage === manifest.totalStages ? 'All parts collected. Assemble whenever you are ready.' : 'Your new part is ready in the collection bay.'}</p>
+        <p className="bootstrap-note">
+          {currentStage === manifest.totalStages
+            ? 'All parts collected. Assemble whenever you are ready.'
+            : 'Your new part is ready in the collection bay.'}
+        </p>
       </section>
     </main>
   )

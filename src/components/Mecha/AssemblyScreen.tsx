@@ -16,7 +16,9 @@ export function AssemblyScreen() {
 
   useEffect(() => {
     return appScheduler.after(
-      reduceMotion ? PRESENTATION_TIMINGS.reducedAssemblyReveal : PRESENTATION_TIMINGS.assemblyReveal,
+      reduceMotion
+        ? PRESENTATION_TIMINGS.reducedAssemblyReveal
+        : PRESENTATION_TIMINGS.assemblyReveal,
       () => setAssembled(true),
     )
   }, [reduceMotion])
@@ -28,20 +30,41 @@ export function AssemblyScreen() {
         <h1 id="assembly-title">ASSEMBLY SEQUENCE</h1>
         <div className="assembly-canvas">
           {assembled ? (
-            <motion.div className="final-mecha" initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: reduceMotion ? 0 : 0.8 }}>
-              <AssetImage src={getFinalAsset(mechaId)} alt={`${manifest.name} assembled`} className="mecha-image" />
+            <motion.div
+              className="final-mecha"
+              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: reduceMotion ? 0 : 0.8 }}
+            >
+              <AssetImage
+                src={getFinalAsset(mechaId)}
+                alt={`${manifest.name} assembled`}
+                className="mecha-image"
+              />
             </motion.div>
           ) : (
             <div className="assembly-parts">
               {manifest.stages.map((part) => (
-                <motion.div key={part.stage} className="assembly-part-tile" initial={{ opacity: 1, scale: 1 }} animate={reduceMotion ? { opacity: 1 } : { opacity: [1, 1, 0], scale: [1, 0.96, 0.5], y: [0, 0, -12] }} transition={{ duration: 2, times: [0, 0.5, 1] }}>
+                <motion.div
+                  key={part.stage}
+                  className="assembly-part-tile"
+                  initial={{ opacity: 1, scale: 1 }}
+                  animate={
+                    reduceMotion
+                      ? { opacity: 1 }
+                      : { opacity: [1, 1, 0], scale: [1, 0.96, 0.5], y: [0, 0, -12] }
+                  }
+                  transition={{ duration: 2, times: [0, 0.5, 1] }}
+                >
                   <StageImage mechaId={mechaId} stage={part.stage} className="part-image" />
                 </motion.div>
               ))}
             </div>
           )}
         </div>
-        <p className="assembly-part">{assembled ? 'FINAL ASSEMBLY COMPLETE' : 'CONNECTING PARTS'}</p>
+        <p className="assembly-part">
+          {assembled ? 'FINAL ASSEMBLY COMPLETE' : 'CONNECTING PARTS'}
+        </p>
       </section>
     </main>
   )

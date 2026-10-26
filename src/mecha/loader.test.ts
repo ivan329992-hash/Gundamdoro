@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { findMechaManifest, getBreakAsset, getFinalAsset, getMechaManifest, getMechaManifests, getNextStageDefinition, getStageAsset } from './loader'
+import {
+  findMechaManifest,
+  getBreakAsset,
+  getFinalAsset,
+  getMechaManifest,
+  getMechaManifests,
+  getNextStageDefinition,
+  getStageAsset,
+} from './loader'
 
 describe('collectible mecha assets', () => {
   it('loads seven part definitions with masked lower-body sources and a distinct final image', () => {
@@ -36,17 +44,39 @@ describe('collectible mecha assets', () => {
 
   it('discovers original and user-supplied fan-art models without sharing part or final images', () => {
     const models = getMechaManifests()
-    expect(models.map((model) => model.id)).toEqual(['mecha-01', 'mecha-02', 'mecha-03', 'mecha-04', 'mecha-05', 'mecha-06', 'wing-zero-ew'])
-    expect(models.slice(2, 6).map((model) => model.description)).toEqual(['重装突击型', '羽翼巡航型', '骨架近战型', '高速突击型'])
+    expect(models.map((model) => model.id)).toEqual([
+      'mecha-01',
+      'mecha-02',
+      'mecha-03',
+      'mecha-04',
+      'mecha-05',
+      'mecha-06',
+      'wing-zero-ew',
+    ])
+    expect(models.slice(2, 6).map((model) => model.description)).toEqual([
+      '重装突击型',
+      '羽翼巡航型',
+      '骨架近战型',
+      '高速突击型',
+    ])
     const images = models.flatMap((model) => [
       getFinalAsset(model.id),
       ...model.stages.map((part) => getStageAsset(part.stage, model.id)),
     ])
     expect(images.every(Boolean)).toBe(true)
-    const sourcesByModel = models.map((model) => new Set([getFinalAsset(model.id), ...model.stages.map((part) => getStageAsset(part.stage, model.id))]))
-    for (let index = 0; index < sourcesByModel.length; index++) for (const image of sourcesByModel[index]) {
-      expect(sourcesByModel.every((other, otherIndex) => otherIndex === index || !other.has(image))).toBe(true)
-    }
+    const sourcesByModel = models.map(
+      (model) =>
+        new Set([
+          getFinalAsset(model.id),
+          ...model.stages.map((part) => getStageAsset(part.stage, model.id)),
+        ]),
+    )
+    for (let index = 0; index < sourcesByModel.length; index++)
+      for (const image of sourcesByModel[index]) {
+        expect(
+          sourcesByModel.every((other, otherIndex) => otherIndex === index || !other.has(image)),
+        ).toBe(true)
+      }
     for (const model of models) {
       expect(model.totalStages).toBe(model.stages.length)
       expect(getNextStageDefinition(model.totalStages, model.id)).toBeNull()

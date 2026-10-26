@@ -1,8 +1,8 @@
 /** 【UI 读图助手】按 mechaId/阶段取 manifest 与 PNG URL；底层是 catalog + bundledAssets。 */
 import { appAssets, appDependencies } from '../app/dependencies'
-import type { MechaManifest, MechaStage } from './types'
+import type { MechaManifest, MechaStage } from '../domain/types'
 
-export const mechaManifest = appDependencies.catalog.defaultMecha
+const mechaManifest = appDependencies.catalog.defaultMecha
 
 export function findMechaManifest(mechaId: string): MechaManifest | null {
   return appDependencies.catalog.find(mechaId)
@@ -18,11 +18,17 @@ export function getMechaManifest(mechaId = mechaManifest.id): MechaManifest {
   return manifest
 }
 
-export function getStageDefinition(stageNumber: number, mechaId = mechaManifest.id): MechaStage | null {
+export function getStageDefinition(
+  stageNumber: number,
+  mechaId = mechaManifest.id,
+): MechaStage | null {
   return findMechaManifest(mechaId)?.stages.find((stage) => stage.stage === stageNumber) ?? null
 }
 
-export function getNextStageDefinition(currentStage: number, mechaId = mechaManifest.id): MechaStage | null {
+export function getNextStageDefinition(
+  currentStage: number,
+  mechaId = mechaManifest.id,
+): MechaStage | null {
   return getStageDefinition(currentStage + 1, mechaId)
 }
 
@@ -38,6 +44,8 @@ export function getFinalAsset(mechaId = mechaManifest.id): string | null {
 
 export function getBreakAsset(mechaId = mechaManifest.id): string | null {
   if (!findMechaManifest(mechaId)) return null
-  return appAssets.resolve(mechaId, 'break/break-01.png')
-    ?? appAssets.resolve(mechaManifest.id, 'break/break-01.png')
+  return (
+    appAssets.resolve(mechaId, 'break/break-01.png') ??
+    appAssets.resolve(mechaManifest.id, 'break/break-01.png')
+  )
 }

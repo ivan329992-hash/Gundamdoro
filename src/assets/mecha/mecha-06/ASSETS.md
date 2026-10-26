@@ -20,13 +20,13 @@ Shared suffix: Keep this exact robot's geometry, panel seams, colors, surface fi
 
 ## Source image
 
-`final/assembled.png` was copied from `exec-64572731-f605-4778-9989-9ff48a156174.png`. Official product reference URLs and design directions are recorded in `docs/design-four-models.md`; no official image was added to the runtime assets.
+`final/assembled.png` was copied from `exec-64572731-f605-4778-9989-9ff48a156174.png`. Official product pages informed design directions only; no official image was added to the runtime assets. Detailed design references and prompts are local-only and are not distributed with this repository.
 
 ## Generated part sources
 
 <!-- generated-part-sources -->
-- `parts/leg-unit.png`: `exec-7cc611d2-3587-4064-9269-bffb464e3fd6.png` (resume prompt in `docs/design-four-models-resume.md`)
-- `parts/right-arm.png`: `exec-e4b0eb6b-4bb6-4b72-8e97-d4e6bfbf1a9a.png` (resume prompt in `docs/design-four-models-resume.md`)
-- `parts/left-arm.png`: `exec-ff2d4718-2a68-4da6-87d0-bf47a5b26520.png` (resume prompt in `docs/design-four-models-resume.md`)
+- `parts/leg-unit.png`: `exec-7cc611d2-3587-4064-9269-bffb464e3fd6.png` (local-only refinement prompt)
+- `parts/right-arm.png`: `exec-e4b0eb6b-4bb6-4b72-8e97-d4e6bfbf1a9a.png` (local-only refinement prompt)
+- `parts/left-arm.png`: `exec-ff2d4718-2a68-4da6-87d0-bf47a5b26520.png` (local-only refinement prompt)
 - `parts/head.png`: `exec-30a5b34d-542c-4c8f-ae43-19d2730de40d.png`
 - `parts/torso.png`: `exec-a94bd444-7b65-43ab-9727-b4d0a1ab44d6.png`

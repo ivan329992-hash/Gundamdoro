@@ -1,5 +1,5 @@
 /** 【Store·工厂】Zustand + persist：把 useCases 挂成 actions；initialize 负责水合后再 recover。 */
-import { create } from 'zustand'
+import { create, type StateCreator } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { AppDependencies } from '../application/ports'
 import { APP_STORAGE_KEY, APP_STORAGE_VERSION, createSnapshotCodec } from '../application/snapshot'
@@ -9,16 +9,29 @@ import type { AppData, AppState } from '../domain/types'
 import { createWorkbenchUseCases } from '../application/workbench'
 import { importUserModel } from '../application/importModel'
 import type { UserModelLibrary } from '../application/ports'
+import { trackPersistence } from './persistence'
 
 const libraries = new WeakMap<object, UserModelLibrary>()
+const persistenceControllers = new WeakMap<object, ReturnType<typeof trackPersistence>>()
 
 export function createAppStore(dependencies: AppDependencies) {
   const useCases = createAppUseCases(dependencies)
   const codec = createSnapshotCodec(dependencies)
   const workbench = createWorkbenchUseCases(dependencies)
-  const store = create<AppState>()(persist<AppState, [], [], AppData>(
+  let updateStatus = (_status: AppState['persistenceStatus']) => {}
+  const persistence = trackPersistence(
+    createJSONStorage<AppData>(() => ({
+      getItem: (key) => dependencies.storage().getItem(key),
+      setItem: (key, value) => dependencies.storage().setItem(key, value),
+      removeItem: (key) => dependencies.storage().removeItem(key),
+    }))!,
+    (status) => updateStatus(status),
+  )
+  const persistedState = persist<AppState, [], [], AppData>(
     (set, get) => ({
       ...createDefaultData(dependencies),
+      persistenceStatus: 'saved',
+      retryPersistence: () => set((state) => state),
       importModel: (draft) => importUserModel(draft, get().phase, dependencies),
       selectMecha: (mechaId) => set((state) => useCases.selectMecha(state, mechaId)),
       startFocus: (now) => set((state) => useCases.startFocus(state, now)),
@@ -31,13 +44,15 @@ export function createAppStore(dependencies: AppDependencies) {
       endBreak: () => set((state) => useCases.endBreak(state)),
       finishPartReveal: (now) => set((state) => useCases.finishPartReveal(state, now)),
       startAssembly: () => set((state) => useCases.startAssembly(state)),
-      finishAssemblyAnimation: (now) => set((state) => useCases.finishAssemblyAnimation(state, now)),
+      finishAssemblyAnimation: (now) =>
+        set((state) => useCases.finishAssemblyAnimation(state, now)),
       resetMecha: () => set((state) => useCases.resetMecha(state)),
       updateSettings: (settings) => set((state) => useCases.updateSettings(state, settings)),
       recoverState: (now) => set((state) => useCases.recoverState(state, now)),
       syncTimer: (now) => set((state) => useCases.syncTimer(state, now)),
       prepareWorkbench: () => set((state) => workbench.prepareWorkbench(state)),
-      selectWorkbenchPart: (slot, partId) => set((state) => workbench.selectWorkbenchPart(state, slot, partId)),
+      selectWorkbenchPart: (slot, partId) =>
+        set((state) => workbench.selectWorkbenchPart(state, slot, partId)),
       clearWorkbenchPart: (slot) => set((state) => workbench.clearWorkbenchPart(state, slot)),
       setWorkbenchName: (name) => set((state) => workbench.setWorkbenchName(state, name)),
       randomizeWorkbench: () => set((state) => workbench.randomizeWorkbench(state)),
@@ -46,25 +61,40 @@ export function createAppStore(dependencies: AppDependencies) {
     {
       name: APP_STORAGE_KEY,
       version: APP_STORAGE_VERSION,
-      storage: createJSONStorage(() => ({
-        getItem: (key) => dependencies.storage().getItem(key),
-        setItem: (key, value) => dependencies.storage().setItem(key, value),
-        removeItem: (key) => dependencies.storage().removeItem(key),
-      })),
+      storage: persistence.storage,
       migrate: codec.migrate,
       partialize: codec.encode,
       merge: (saved, current) => ({ ...current, ...codec.decode(saved) }),
       skipHydration: true,
     },
-  ))
+  )
+  const initializeState: StateCreator<AppState, [], [['zustand/persist', AppData]]> = (
+    set,
+    get,
+    api,
+  ) => {
+    // 绕过 persist 更新运行期状态，避免状态提示再次触发保存。
+    updateStatus = (status) => {
+      if (get().persistenceStatus !== status) set({ persistenceStatus: status })
+    }
+    return persistedState(set, get, api)
+  }
+  const store = create<AppState>()(initializeState)
+  persistenceControllers.set(store, persistence)
   if (dependencies.models) libraries.set(store, dependencies.models)
   return store
 }
 
 export async function initializeAppStore(store: ReturnType<typeof createAppStore>): Promise<void> {
-  await libraries.get(store)?.load()
-  if (!store.persist) throw new Error('Local storage is unavailable')
-  if (!store.persist.hasHydrated()) await store.persist.rehydrate()
-  if (!store.persist.hasHydrated()) throw new Error('Could not load the saved app state')
-  await store.getState().recoverState()
+  const persistence = persistenceControllers.get(store)
+  persistence?.setStrict(true)
+  try {
+    await libraries.get(store)?.load()
+    if (!store.persist) throw new Error('Local storage is unavailable')
+    if (!store.persist.hasHydrated()) await store.persist.rehydrate()
+    if (!store.persist.hasHydrated()) throw new Error('Could not load the saved app state')
+    await store.getState().recoverState()
+  } finally {
+    persistence?.setStrict(false)
+  }
 }

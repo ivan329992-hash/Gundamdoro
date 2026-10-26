@@ -1,18 +1,41 @@
-/** 【应用·存档】快照校验与旧版→v8 迁移；库存和拼装配方独立持久化。 */
+/** 快照校验与版本迁移：进度、库存和拼装草稿共用版本 8 的存档。 */
 import { normalizeSettings } from '../domain/settings'
 import { createInitialTimer, getDurationMs, type TimerState } from '../domain/timer'
-import type { AppData, AppPhase, BuiltMecha, Composition, DraftComposition, WorkbenchDraft } from '../domain/types'
-import { clampInteger, clampNumber, isAppPhase, isFiniteNumber, isRecord, isTimerStatus } from '../domain/validation'
+import type {
+  AppData,
+  AppPhase,
+  BuiltMecha,
+  Composition,
+  DraftComposition,
+  WorkbenchDraft,
+} from '../domain/types'
+import {
+  clampInteger,
+  clampNumber,
+  isAppPhase,
+  isFiniteNumber,
+  isRecord,
+  isTimerStatus,
+} from '../domain/validation'
 import type { AppDependencies } from './ports'
 import { archiveCompletedBuild } from './archiveBuild'
-import { ALL_PART_SLOTS, createWorkbench, getCompositionSlots, getPartDefinitions, getPartIdKey, getPartIdSlot } from '../domain/inventory'
+import {
+  ALL_PART_SLOTS,
+  createWorkbench,
+  getCompositionSlots,
+  getPartDefinitions,
+  getPartIdKey,
+  getPartIdSlot,
+  normalizeWorkbenchName,
+} from '../domain/inventory'
 import { migrateSplitParts } from './splitPartsMigration'
 
 export const APP_STORAGE_KEY = 'gundamdoro-app-state'
 export const APP_STORAGE_VERSION = 8
 
 export function createSnapshotCodec(dependencies: AppDependencies) {
-  const durationMs = (minutes: number) => getDurationMs(minutes, dependencies.runtime.millisecondsPerMinute())
+  const durationMs = (minutes: number) =>
+    getDurationMs(minutes, dependencies.runtime.millisecondsPerMinute())
   const createIdleTimer = createInitialTimer
 
   function normalizeParts(value: unknown): DraftComposition {
@@ -34,7 +57,7 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
     if (!isRecord(value)) return createWorkbench()
     return {
       id: typeof value.id === 'string' && value.id.trim() ? value.id : null,
-      name: typeof value.name === 'string' ? Array.from(value.name).slice(0, 40).join('') : '自定义机体',
+      name: typeof value.name === 'string' ? normalizeWorkbenchName(value.name) : '自定义机体',
       parts: normalizeParts(value.parts),
     }
   }
@@ -44,26 +67,48 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
     const seen = new Set<string>()
     const entries: BuiltMecha[] = []
     for (const item of value) {
-      if (!isRecord(item)
-        || typeof item.id !== 'string' || !item.id.trim()
-        || typeof item.mechaId !== 'string' || !item.mechaId.trim()
-        || seen.has(item.id)) continue
+      if (
+        !isRecord(item) ||
+        typeof item.id !== 'string' ||
+        !item.id.trim() ||
+        typeof item.mechaId !== 'string' ||
+        !item.mechaId.trim() ||
+        seen.has(item.id)
+      )
+        continue
 
       const customParts = item.kind === 'custom' ? normalizeParts(item.composition) : null
-      if (customParts && !getCompositionSlots(customParts).every((slot) => customParts[slot])) continue
+      if (customParts && !getCompositionSlots(customParts).every((slot) => customParts[slot]))
+        continue
       seen.add(item.id)
       entries.push({
         id: item.id,
         mechaId: item.mechaId,
-        mechaName: typeof item.mechaName === 'string' && item.mechaName.trim()
-          ? item.mechaName : dependencies.catalog.find(item.mechaId)?.name ?? item.mechaId,
-        completedAt: isFiniteNumber(item.completedAt) && item.completedAt >= 0 && item.completedAt <= 8_640_000_000_000_000
-          ? item.completedAt : null,
-        completedFocusSessions: clampInteger(item.completedFocusSessions, 0, 0, Number.MAX_SAFE_INTEGER),
+        mechaName:
+          typeof item.mechaName === 'string' && item.mechaName.trim()
+            ? item.mechaName
+            : (dependencies.catalog.find(item.mechaId)?.name ?? item.mechaId),
+        completedAt:
+          isFiniteNumber(item.completedAt) &&
+          item.completedAt >= 0 &&
+          item.completedAt <= 8_640_000_000_000_000
+            ? item.completedAt
+            : null,
+        completedFocusSessions: clampInteger(
+          item.completedFocusSessions,
+          0,
+          0,
+          Number.MAX_SAFE_INTEGER,
+        ),
         totalFocusedMinutes: clampNumber(item.totalFocusedMinutes, 0, 0),
-        ...(customParts ? { kind: 'custom' as const, composition: customParts as Composition } : {}),
-        ...(customParts && typeof item.assemblyProfile === 'string' && /^[a-z][a-z0-9-]{0,79}$/.test(item.assemblyProfile)
-          ? { assemblyProfile: item.assemblyProfile } : {}),
+        ...(customParts
+          ? { kind: 'custom' as const, composition: customParts as Composition }
+          : {}),
+        ...(customParts &&
+        typeof item.assemblyProfile === 'string' &&
+        /^[a-z][a-z0-9-]{0,79}$/.test(item.assemblyProfile)
+          ? { assemblyProfile: item.assemblyProfile }
+          : {}),
       })
     }
     return entries
@@ -76,15 +121,11 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
 
     const status = isTimerStatus(value.status) ? value.status : 'idle'
     const durationMs = clampNumber(value.durationMs, fallbackDurationMs, 1)
-    const remainingMs = Math.min(
-      durationMs,
-      clampNumber(value.remainingMs, durationMs, 0),
-    )
+    const remainingMs = Math.min(durationMs, clampNumber(value.remainingMs, durationMs, 0))
     const startedAt = isFiniteNumber(value.startedAt) ? value.startedAt : null
     const endAt = isFiniteNumber(value.endAt) ? value.endAt : null
-    const sessionId = typeof value.sessionId === 'string' && value.sessionId.length > 0
-      ? value.sessionId
-      : null
+    const sessionId =
+      typeof value.sessionId === 'string' && value.sessionId.length > 0 ? value.sessionId : null
 
     if (phase === 'FOCUS' && status !== 'idle' && sessionId === null) {
       return createIdleTimer(fallbackDurationMs)
@@ -123,14 +164,20 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
     }
   }
 
-  function normalizeData(value: unknown, migrateInventory = false, migratePartCount = false): AppData {
+  function normalizeData(
+    value: unknown,
+    migrateInventory = false,
+    migratePartCount = false,
+  ): AppData {
     const source = isRecord(value) ? value : {}
     const rawSettings = isRecord(source.settings) ? source.settings : {}
     const settings = normalizeSettings(rawSettings)
     let phase = isAppPhase(source.phase) ? source.phase : 'READY'
     const rawAssembly = isRecord(source.assembly) ? source.assembly : {}
-    const mechaId = typeof rawAssembly.mechaId === 'string' && rawAssembly.mechaId.trim()
-      ? rawAssembly.mechaId : dependencies.catalog.defaultMecha.id
+    const mechaId =
+      typeof rawAssembly.mechaId === 'string' && rawAssembly.mechaId.trim()
+        ? rawAssembly.mechaId
+        : dependencies.catalog.defaultMecha.id
     const mecha = dependencies.catalog.find(mechaId)
     if (!mecha) throw new Error(`The saved model is unavailable: ${mechaId}`)
     const totalStages = mecha.totalStages
@@ -138,11 +185,22 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
       mechaId: mecha.id,
       currentStage: clampInteger(rawAssembly.currentStage, 0, 0, totalStages),
       totalStages,
-      completedFocusSessions: clampInteger(rawAssembly.completedFocusSessions, 0, 0, Number.MAX_SAFE_INTEGER),
+      completedFocusSessions: clampInteger(
+        rawAssembly.completedFocusSessions,
+        0,
+        0,
+        Number.MAX_SAFE_INTEGER,
+      ),
     }
     const formerTotal = rawAssembly.totalStages
-    if (migratePartCount && typeof formerTotal === 'number' && Number.isInteger(formerTotal)
-      && formerTotal > 0 && formerTotal < totalStages && assembly.currentStage >= formerTotal) {
+    if (
+      migratePartCount &&
+      typeof formerTotal === 'number' &&
+      Number.isInteger(formerTotal) &&
+      formerTotal > 0 &&
+      formerTotal < totalStages &&
+      assembly.currentStage >= formerTotal
+    ) {
       if (phase === 'ASSEMBLY' || phase === 'COMPLETE') assembly.currentStage = totalStages
       else if (phase === 'FOCUS' || phase === 'BREAK') phase = 'READY'
     }
@@ -156,9 +214,10 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
       phase = 'READY'
     }
     const totalFocusedMinutes = clampNumber(source.totalFocusedMinutes, 0, 0)
-    const lastProcessedFocusSessionId = typeof source.lastProcessedFocusSessionId === 'string'
-      ? source.lastProcessedFocusSessionId
-      : null
+    const lastProcessedFocusSessionId =
+      typeof source.lastProcessedFocusSessionId === 'string'
+        ? source.lastProcessedFocusSessionId
+        : null
     const focusDurationMs = durationMs(settings.focusMinutes)
     const breakDurationMs = durationMs(settings.breakMinutes)
     const timer = normalizeTimer(
@@ -175,17 +234,25 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
       settings,
       lastProcessedFocusSessionId,
       hangar: normalizeHangar(source.hangar),
-      currentBuildId: (phase === 'ASSEMBLY' || phase === 'COMPLETE')
-        && typeof source.currentBuildId === 'string' && source.currentBuildId.trim()
-        ? source.currentBuildId : null,
+      currentBuildId:
+        (phase === 'ASSEMBLY' || phase === 'COMPLETE') &&
+        typeof source.currentBuildId === 'string' &&
+        source.currentBuildId.trim()
+          ? source.currentBuildId
+          : null,
       unlockedParts: normalizeInventory(source.unlockedParts),
       workbench: normalizeWorkbench(source.workbench),
     }
 
     if (migrateInventory) {
       const definitions = getPartDefinitions(dependencies.catalog)
-      const earned = definitions.filter((part) => (part.mechaId === assembly.mechaId && part.stage <= assembly.currentStage)
-        || data.hangar.some((entry) => entry.kind !== 'custom' && entry.mechaId === part.mechaId)).map((part) => part.id)
+      const earned = definitions
+        .filter(
+          (part) =>
+            (part.mechaId === assembly.mechaId && part.stage <= assembly.currentStage) ||
+            data.hangar.some((entry) => entry.kind !== 'custom' && entry.mechaId === part.mechaId),
+        )
+        .map((part) => part.id)
       data.unlockedParts = [...new Set([...data.unlockedParts, ...earned])]
     }
 
@@ -205,20 +272,37 @@ export function createSnapshotCodec(dependencies: AppDependencies) {
   }
 
   function migrateLegacyData(value: unknown, version: number): AppData {
-    if (version > APP_STORAGE_VERSION) throw new Error('The saved state requires a newer app version')
+    if (version > APP_STORAGE_VERSION)
+      throw new Error('The saved state requires a newer app version')
     const source = isRecord(value) ? value : {}
-    const legacy = { ...source, phase: version === 0 && source.phase === 'ASSEMBLY' ? 'PART_REWARD' : source.phase }
-    const archivedModels = new Set(normalizeHangar(source.hangar).filter((entry) => entry.kind !== 'custom').map((entry) => entry.mechaId))
-    return normalizeData(version < 7 ? migrateSplitParts(legacy, dependencies, archivedModels, version) : legacy, version < 7, version < 5)
+    const legacy = {
+      ...source,
+      phase: version === 0 && source.phase === 'ASSEMBLY' ? 'PART_REWARD' : source.phase,
+    }
+    const archivedModels = new Set(
+      normalizeHangar(source.hangar)
+        .filter((entry) => entry.kind !== 'custom')
+        .map((entry) => entry.mechaId),
+    )
+    return normalizeData(
+      version < 7 ? migrateSplitParts(legacy, dependencies, archivedModels, version) : legacy,
+      version < 7,
+      version < 5,
+    )
   }
 
   function encode(state: AppData): AppData {
     return {
-      phase: state.phase, timer: state.timer, assembly: state.assembly,
-      totalFocusedMinutes: state.totalFocusedMinutes, settings: state.settings,
+      phase: state.phase,
+      timer: state.timer,
+      assembly: state.assembly,
+      totalFocusedMinutes: state.totalFocusedMinutes,
+      settings: state.settings,
       lastProcessedFocusSessionId: state.lastProcessedFocusSessionId,
-      hangar: state.hangar, currentBuildId: state.currentBuildId,
-      unlockedParts: state.unlockedParts, workbench: state.workbench,
+      hangar: state.hangar,
+      currentBuildId: state.currentBuildId,
+      unlockedParts: state.unlockedParts,
+      workbench: state.workbench,
     }
   }
 

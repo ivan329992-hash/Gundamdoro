@@ -27,12 +27,14 @@ export function clampNumber(value: unknown, fallback: number, min: number): numb
 }
 
 export function isAppPhase(value: unknown): value is AppPhase {
-  return value === 'READY'
-    || value === 'FOCUS'
-    || value === 'PART_REWARD'
-    || value === 'ASSEMBLY'
-    || value === 'BREAK'
-    || value === 'COMPLETE'
+  return (
+    value === 'READY' ||
+    value === 'FOCUS' ||
+    value === 'PART_REWARD' ||
+    value === 'ASSEMBLY' ||
+    value === 'BREAK' ||
+    value === 'COMPLETE'
+  )
 }
 
 export function isTimerStatus(value: unknown): value is TimerStatus {

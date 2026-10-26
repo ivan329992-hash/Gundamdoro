@@ -9,10 +9,21 @@ import type { Composition } from '../domain/types'
 
 function pilotApp() {
   const fake = createFakeApp()
-  fake.dependencies.catalog = createMechaCatalog(['mecha-01', 'mecha-02', 'mecha-03'].map((id) => ({
-    id, name: id, totalStages: 5, finalAsset: 'final/model.png',
-    stages: PART_SLOTS.map((slot, index) => ({ stage: index + 1, slot, name: slot, asset: `parts/${slot}.png` })),
-  })), 'mecha-01')
+  fake.dependencies.catalog = createMechaCatalog(
+    ['mecha-01', 'mecha-02', 'mecha-03'].map((id) => ({
+      id,
+      name: id,
+      totalStages: 5,
+      finalAsset: 'final/model.png',
+      stages: PART_SLOTS.map((slot, index) => ({
+        stage: index + 1,
+        slot,
+        name: slot,
+        asset: `parts/${slot}.png`,
+      })),
+    })),
+    'mecha-01',
+  )
   fake.dependencies.assembly = { profile: 'standard-front-v1', modelIds: ['mecha-01', 'mecha-02'] }
   return fake
 }
@@ -20,21 +31,33 @@ function pilotApp() {
 describe('compatible assembly application guards', () => {
   it('filters preparation, selection and randomization even when unsupported parts are owned', () => {
     const fake = pilotApp()
-    const store = createAppStore({ ...fake.dependencies, runtime: { ...fake.dependencies.runtime, random: () => 1 } })
-    store.setState({ unlockedParts: getPartDefinitions(fake.dependencies.catalog).map((part) => part.id) })
+    const store = createAppStore({
+      ...fake.dependencies,
+      runtime: { ...fake.dependencies.runtime, random: () => 1 },
+    })
+    store.setState({
+      unlockedParts: getPartDefinitions(fake.dependencies.catalog).map((part) => part.id),
+    })
     store.getState().prepareWorkbench()
     store.getState().selectWorkbenchPart('head', 'mecha-03:head')
     store.getState().selectWorkbenchPart('head', 'mecha-02:torso')
     expect(store.getState().workbench.parts.head).toBe('mecha-01:head')
     store.getState().randomizeWorkbench()
-    expect(Object.values(store.getState().workbench.parts).every((id) => id?.startsWith('mecha-02:'))).toBe(true)
+    expect(
+      Object.values(store.getState().workbench.parts).every((id) => id?.startsWith('mecha-02:')),
+    ).toBe(true)
   })
 
   it('preserves old unsupported draft choices and blocks saving until explicitly replaced', () => {
     const fake = pilotApp()
     const store = createAppStore(fake.dependencies)
-    const parts = Object.fromEntries(PART_SLOTS.map((slot) => [slot, `mecha-03:${slot}`])) as Composition
-    store.setState({ unlockedParts: getPartDefinitions(fake.dependencies.catalog).map((part) => part.id), workbench: { id: 'legacy-draft', name: '旧配方', parts } })
+    const parts = Object.fromEntries(
+      PART_SLOTS.map((slot) => [slot, `mecha-03:${slot}`]),
+    ) as Composition
+    store.setState({
+      unlockedParts: getPartDefinitions(fake.dependencies.catalog).map((part) => part.id),
+      workbench: { id: 'legacy-draft', name: '旧配方', parts },
+    })
     store.getState().prepareWorkbench()
     store.getState().saveCustomBuild()
     expect(store.getState().workbench.parts).toEqual(parts)
@@ -71,8 +94,18 @@ describe('compatible assembly application guards', () => {
     store.getState().saveCustomBuild()
     const fresh = store.getState().hangar[0]
     const { assemblyProfile: _profile, ...legacy } = fresh
-    const records = [fresh, { ...legacy, id: 'legacy' }, { ...fresh, id: 'future', assemblyProfile: 'future-frame-v9' }]
-    fake.values.set(APP_STORAGE_KEY, JSON.stringify({ version: APP_STORAGE_VERSION, state: { ...store.getState(), hangar: records } }))
+    const records = [
+      fresh,
+      { ...legacy, id: 'legacy' },
+      { ...fresh, id: 'future', assemblyProfile: 'future-frame-v9' },
+    ]
+    fake.values.set(
+      APP_STORAGE_KEY,
+      JSON.stringify({
+        version: APP_STORAGE_VERSION,
+        state: { ...store.getState(), hangar: records },
+      }),
+    )
     const restored = createAppStore(fake.dependencies)
     await initializeAppStore(restored)
     expect(restored.getState().hangar).toEqual(records)

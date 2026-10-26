@@ -1,7 +1,17 @@
-/** 【应用·用例】状态机核心：startFocus/completeFocus/拼装/休息等。纯函数 (state)=>(state)。 */
-import { canSelectMecha, collectNextPart, createCollection, isCollectionComplete } from '../domain/collection'
+/** 状态机用例：根据当前状态及注入的时钟、ID 和目录生成下一份业务状态。 */
+import {
+  canSelectMecha,
+  collectNextPart,
+  createCollection,
+  isCollectionComplete,
+} from '../domain/collection'
 import { normalizeSettings } from '../domain/settings'
-import { createInitialTimer, createRunningTimer, getDurationMs, getRemainingMs } from '../domain/timer'
+import {
+  createInitialTimer,
+  createRunningTimer,
+  getDurationMs,
+  getRemainingMs,
+} from '../domain/timer'
 import type { AppData, MechaManifest, Settings } from '../domain/types'
 import type { AppDependencies } from './ports'
 import { archiveCompletedBuild } from './archiveBuild'
@@ -14,14 +24,28 @@ export function createAppUseCases(dependencies: AppDependencies) {
 
   function startFocus(state: AppData, now = runtime.now()): AppData {
     if (state.phase !== 'READY' || isCollectionComplete(state.assembly)) return state
-    return { ...state, phase: 'FOCUS', timer: createRunningTimer(durationMs(state.settings.focusMinutes), now, runtime.newId()) }
+    return {
+      ...state,
+      phase: 'FOCUS',
+      timer: createRunningTimer(durationMs(state.settings.focusMinutes), now, runtime.newId()),
+    }
   }
 
   function completeFocus(state: AppData, sessionId: string, now = runtime.now()): AppData {
-    if (state.phase !== 'FOCUS' || state.timer.status !== 'running'
-      || state.timer.sessionId !== sessionId || state.timer.endAt === null || state.timer.endAt > now
-      || sessionId === state.lastProcessedFocusSessionId || isCollectionComplete(state.assembly)) return state
-    const part = getPartDefinitions(catalog).find((part) => part.mechaId === state.assembly.mechaId && part.stage === state.assembly.currentStage + 1)
+    if (
+      state.phase !== 'FOCUS' ||
+      state.timer.status !== 'running' ||
+      state.timer.sessionId !== sessionId ||
+      state.timer.endAt === null ||
+      state.timer.endAt > now ||
+      sessionId === state.lastProcessedFocusSessionId ||
+      isCollectionComplete(state.assembly)
+    )
+      return state
+    const part = getPartDefinitions(catalog).find(
+      (part) =>
+        part.mechaId === state.assembly.mechaId && part.stage === state.assembly.currentStage + 1,
+    )
     return {
       ...state,
       phase: 'PART_REWARD',
@@ -34,14 +58,28 @@ export function createAppUseCases(dependencies: AppDependencies) {
   }
 
   function pauseTimer(state: AppData, now = runtime.now()): AppData {
-    if (state.phase !== 'FOCUS' || state.timer.status !== 'running' || state.timer.endAt === null) return state
-    if (state.timer.endAt <= now && state.timer.sessionId) return completeFocus(state, state.timer.sessionId, now)
-    return { ...state, timer: { ...state.timer, status: 'paused', remainingMs: getRemainingMs(state.timer, now), endAt: null } }
+    if (state.phase !== 'FOCUS' || state.timer.status !== 'running' || state.timer.endAt === null)
+      return state
+    if (state.timer.endAt <= now && state.timer.sessionId)
+      return completeFocus(state, state.timer.sessionId, now)
+    return {
+      ...state,
+      timer: {
+        ...state.timer,
+        status: 'paused',
+        remainingMs: getRemainingMs(state.timer, now),
+        endAt: null,
+      },
+    }
   }
 
   function resumeTimer(state: AppData, now = runtime.now()): AppData {
-    if (state.phase !== 'FOCUS' || state.timer.status !== 'paused' || state.timer.remainingMs <= 0) return state
-    return { ...state, timer: { ...state.timer, status: 'running', endAt: now + state.timer.remainingMs } }
+    if (state.phase !== 'FOCUS' || state.timer.status !== 'paused' || state.timer.remainingMs <= 0)
+      return state
+    return {
+      ...state,
+      timer: { ...state.timer, status: 'running', endAt: now + state.timer.remainingMs },
+    }
   }
 
   function cancelTimer(state: AppData): AppData {
@@ -52,12 +90,21 @@ export function createAppUseCases(dependencies: AppDependencies) {
     if (state.phase !== 'PART_REWARD') return state
     return isCollectionComplete(state.assembly)
       ? { ...state, phase: 'READY', timer: idleFocus(state) }
-      : { ...state, phase: 'BREAK', timer: createRunningTimer(durationMs(state.settings.breakMinutes), now, null) }
+      : {
+          ...state,
+          phase: 'BREAK',
+          timer: createRunningTimer(durationMs(state.settings.breakMinutes), now, null),
+        }
   }
 
   function completeBreak(state: AppData, now = runtime.now()): AppData {
-    if (state.phase !== 'BREAK' || state.timer.status !== 'running'
-      || state.timer.endAt === null || state.timer.endAt > now) return state
+    if (
+      state.phase !== 'BREAK' ||
+      state.timer.status !== 'running' ||
+      state.timer.endAt === null ||
+      state.timer.endAt > now
+    )
+      return state
     return { ...state, phase: 'READY', timer: idleFocus(state) }
   }
 
@@ -66,13 +113,19 @@ export function createAppUseCases(dependencies: AppDependencies) {
   }
 
   function startAssembly(state: AppData): AppData {
-    if (state.phase !== 'READY' || state.assembly.currentStage !== state.assembly.totalStages) return state
+    if (state.phase !== 'READY' || state.assembly.currentStage !== state.assembly.totalStages)
+      return state
     return { ...state, phase: 'ASSEMBLY', currentBuildId: runtime.newId(), timer: idleFocus(state) }
   }
 
   function finishAssemblyAnimation(state: AppData, now = runtime.now()): AppData {
-    if (state.phase !== 'ASSEMBLY' || state.assembly.currentStage !== state.assembly.totalStages) return state
-    return { ...archiveCompletedBuild(state, now, dependencies), phase: 'COMPLETE', timer: idleFocus(state) }
+    if (state.phase !== 'ASSEMBLY' || state.assembly.currentStage !== state.assembly.totalStages)
+      return state
+    return {
+      ...archiveCompletedBuild(state, now, dependencies),
+      phase: 'COMPLETE',
+      timer: idleFocus(state),
+    }
   }
 
   function beginBuild(state: AppData, mecha: MechaManifest): AppData {
@@ -113,17 +166,36 @@ export function createAppUseCases(dependencies: AppDependencies) {
   }
 
   function syncTimer(state: AppData, now = runtime.now()): AppData {
-    if ((state.phase !== 'FOCUS' && state.phase !== 'BREAK') || state.timer.status !== 'running' || state.timer.endAt === null) return state
+    if (
+      (state.phase !== 'FOCUS' && state.phase !== 'BREAK') ||
+      state.timer.status !== 'running' ||
+      state.timer.endAt === null
+    )
+      return state
     if (state.timer.endAt <= now) {
-      if (state.phase === 'FOCUS' && state.timer.sessionId !== null) return completeFocus(state, state.timer.sessionId, now)
+      if (state.phase === 'FOCUS' && state.timer.sessionId !== null)
+        return completeFocus(state, state.timer.sessionId, now)
       if (state.phase === 'BREAK') return completeBreak(state, now)
     }
     return { ...state, timer: { ...state.timer, remainingMs: getRemainingMs(state.timer, now) } }
   }
 
   return {
-    selectMecha, startFocus, completeFocus, pauseTimer, resumeTimer,
-    cancelTimer, abandonBuild, finishPartReveal, completeBreak, endBreak, startAssembly,
-    finishAssemblyAnimation, resetMecha, updateSettings, syncTimer, recoverState: syncTimer,
+    selectMecha,
+    startFocus,
+    completeFocus,
+    pauseTimer,
+    resumeTimer,
+    cancelTimer,
+    abandonBuild,
+    finishPartReveal,
+    completeBreak,
+    endBreak,
+    startAssembly,
+    finishAssemblyAnimation,
+    resetMecha,
+    updateSettings,
+    syncTimer,
+    recoverState: syncTimer,
   }
 }

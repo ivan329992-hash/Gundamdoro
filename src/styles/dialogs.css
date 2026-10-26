@@ -1,0 +1,119 @@
+.settings-dialog label {
+  line-height: 1.5;
+  display: grid;
+  gap: 8px;
+  margin-top: 20px;
+  color: var(--color-muted);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.settings-dialog input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  background: var(--color-background);
+  font: inherit;
+}
+.settings-error {
+  color: var(--color-error);
+  font-size: 12px;
+}
+.settings-dialog {
+  width: min(400px, calc(100% - 32px));
+  padding: 24px;
+  border: 1px solid #3a4c59;
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: 0 24px 80px #000b;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+.settings-dialog .settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: normal;
+}
+.settings-toggle input {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  accent-color: var(--color-accent);
+}
+.abandon-dialog {
+  box-sizing: border-box;
+  width: min(360px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid #344854;
+  border-radius: 16px;
+  background: #14202a;
+  color: #e5edf3;
+}
+.abandon-dialog::backdrop {
+  background: rgb(0 0 0 / 70%);
+}
+.abandon-dialog p {
+  color: #b3c3d0;
+  line-height: 1.6;
+}
+.abandon-dialog button {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.app-dialog {
+  color: var(--color-text);
+  border-radius: var(--radius-panel);
+}
+.app-dialog::backdrop {
+  background: #05080dcc;
+  backdrop-filter: blur(3px);
+}
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.dialog-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+.dialog-close {
+  width: auto;
+  margin: 0;
+  padding: 0 8px;
+  color: var(--color-muted);
+  background: transparent;
+  font-size: 24px;
+  font-weight: 400;
+  min-height: 32px;
+}
+.settings-dialog form > button {
+  width: 100%;
+  margin-top: 20px;
+}
+.settings-hint {
+  color: var(--color-muted);
+  line-height: 1.6;
+  font-size: 12px;
+}
+.preview-dialog {
+  width: min(680px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.expanded-mecha-preview {
+  height: min(72dvh, 760px);
+  margin-top: 12px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 36%, #293a48, #0d141b 72%);
+}

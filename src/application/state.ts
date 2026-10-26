@@ -9,7 +9,9 @@ import { createWorkbench } from '../domain/inventory'
 export function createDefaultData(dependencies: AppDependencies): AppData {
   return {
     phase: 'READY',
-    timer: createInitialTimer(getDurationMs(DEFAULT_SETTINGS.focusMinutes, dependencies.runtime.millisecondsPerMinute())),
+    timer: createInitialTimer(
+      getDurationMs(DEFAULT_SETTINGS.focusMinutes, dependencies.runtime.millisecondsPerMinute()),
+    ),
     assembly: createCollection(dependencies.catalog.defaultMecha),
     totalFocusedMinutes: 0,
     settings: { ...DEFAULT_SETTINGS },
