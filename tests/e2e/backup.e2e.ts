@@ -45,15 +45,9 @@ test('完整备份跨独立浏览器恢复图片、草稿与仓库，素材写�
   browser,
   baseURL,
 }, info) => {
-  await seedOwnedParts(page)
+  await seedOwnedParts(page, true)
   await openApp(page)
   await configureTimer(page)
-  await page.getByRole('button', { name: /配件仓库与拼装/ }).click()
-  await page.getByRole('tab', { name: '自定义拼装', exact: true }).click()
-  await page.getByRole('textbox', { name: /机体名称/ }).fill('备份验证机体')
-  await page.getByRole('button', { name: '保存到成品仓库', exact: true }).click()
-  await expect(page.getByRole('button', { name: '已保存到仓库', exact: true })).toBeDisabled()
-  await page.getByRole('button', { name: '返回', exact: true }).click()
   await page.getByRole('button', { name: '选择机型', exact: true }).click()
   await page.getByRole('button', { name: '添加我的机型', exact: true }).click()
   await page.getByRole('textbox', { name: '机型名称', exact: true }).fill('备份素材机型')

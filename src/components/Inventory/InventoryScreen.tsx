@@ -15,6 +15,7 @@ import { useAppStore } from '../../store/useAppStore'
 import { InventoryPartCard } from './InventoryPartCard'
 import { WorkbenchPreview } from './WorkbenchPreview'
 import { WorkbenchSaveBar } from './WorkbenchSaveBar'
+import { CUSTOM_ASSEMBLY_ENABLED, PARTS_ENTRY_LABEL } from '../../app/features'
 
 interface InventoryScreenProps {
   onClose: () => void
@@ -34,7 +35,7 @@ export function InventoryScreen({ onClose, onOpenHangar }: InventoryScreenProps)
   const selectPart = useAppStore((state) => state.selectWorkbenchPart)
   const clearPart = useAppStore((state) => state.clearWorkbenchPart)
   const setName = useAppStore((state) => state.setWorkbenchName)
-  const isAssembly = tab === 'assembly'
+  const isAssembly = CUSTOM_ASSEMBLY_ENABLED && tab === 'assembly'
 
   const { catalog, assembly } = appDependencies
   const definitions = getPartDefinitions(catalog)
@@ -72,6 +73,7 @@ export function InventoryScreen({ onClose, onOpenHangar }: InventoryScreenProps)
   const nameLength = Array.from(draft.name).length
 
   const changeTab = (next: typeof tab) => {
+    if (next === 'assembly' && !CUSTOM_ASSEMBLY_ENABLED) return
     setTab(next)
     if (next === 'assembly') setModelFilter('all')
   }
@@ -96,7 +98,7 @@ export function InventoryScreen({ onClose, onOpenHangar }: InventoryScreenProps)
         <header className="workshop-heading">
           <div>
             <p className="phase-label">GUNDAMDORO / WORKSHOP</p>
-            <h1 id="workshop-title">配件仓库与拼装台</h1>
+            <h1 id="workshop-title">{PARTS_ENTRY_LABEL}</h1>
           </div>
           <button
             ref={back}
@@ -110,53 +112,55 @@ export function InventoryScreen({ onClose, onOpenHangar }: InventoryScreenProps)
         <p className="workshop-note">
           已解锁 {knownOwned.length} / {definitions.length} 种配件 · 永久保留，可重复使用
         </p>
-        <div
-          className="workshop-tabs"
-          role="tablist"
-          aria-label="工作间"
-          onKeyDown={(event) => {
-            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
-            event.preventDefault()
-            const next =
-              event.key === 'Home'
-                ? 'inventory'
-                : event.key === 'End'
-                  ? 'assembly'
-                  : isAssembly
-                    ? 'inventory'
-                    : 'assembly'
-            changeTab(next)
-            document.getElementById(next + '-tab')?.focus()
-          }}
-        >
-          <button
-            id="inventory-tab"
-            type="button"
-            role="tab"
-            tabIndex={isAssembly ? -1 : 0}
-            aria-selected={!isAssembly}
-            aria-controls="workshop-panel"
-            onClick={() => changeTab('inventory')}
+        {CUSTOM_ASSEMBLY_ENABLED && (
+          <div
+            className="workshop-tabs"
+            role="tablist"
+            aria-label="工作间"
+            onKeyDown={(event) => {
+              if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+              event.preventDefault()
+              const next =
+                event.key === 'Home'
+                  ? 'inventory'
+                  : event.key === 'End'
+                    ? 'assembly'
+                    : isAssembly
+                      ? 'inventory'
+                      : 'assembly'
+              changeTab(next)
+              document.getElementById(next + '-tab')?.focus()
+            }}
           >
-            配件仓库
-          </button>
-          <button
-            id="assembly-tab"
-            type="button"
-            role="tab"
-            tabIndex={isAssembly ? 0 : -1}
-            aria-selected={isAssembly}
-            aria-controls="workshop-panel"
-            onClick={() => changeTab('assembly')}
-          >
-            自定义拼装
-          </button>
-        </div>
+            <button
+              id="inventory-tab"
+              type="button"
+              role="tab"
+              tabIndex={isAssembly ? -1 : 0}
+              aria-selected={!isAssembly}
+              aria-controls="workshop-panel"
+              onClick={() => changeTab('inventory')}
+            >
+              配件仓库
+            </button>
+            <button
+              id="assembly-tab"
+              type="button"
+              role="tab"
+              tabIndex={isAssembly ? 0 : -1}
+              aria-selected={isAssembly}
+              aria-controls="workshop-panel"
+              onClick={() => changeTab('assembly')}
+            >
+              自定义拼装
+            </button>
+          </div>
+        )}
         <div
           id="workshop-panel"
           className={isAssembly ? 'is-assembly' : ''}
-          role="tabpanel"
-          aria-labelledby={tab + '-tab'}
+          role={CUSTOM_ASSEMBLY_ENABLED ? 'tabpanel' : undefined}
+          aria-labelledby={CUSTOM_ASSEMBLY_ENABLED ? tab + '-tab' : undefined}
         >
           {isAssembly && <WorkbenchPreview parts={draft.parts} profile={assembly?.profile} />}
           <div className={isAssembly ? 'workbench-browser' : undefined}>

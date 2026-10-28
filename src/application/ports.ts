@@ -39,6 +39,7 @@ export interface AppDependencies {
   assembly?: AssemblyPolicy
   models?: UserModelLibrary
   backup?: BackupPort
+  workbenchEnabled?: boolean
 }
 
 export interface BackupPort {

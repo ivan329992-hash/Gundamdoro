@@ -107,9 +107,7 @@ export function ModelSelectionScreen({
                 </div>
                 <h2>{model.name}</h2>
                 {model.description && <p>{model.description}</p>}
-                {isUserModelId(model.id) && (
-                  <p className="model-user-label">用户导入 · 仅收集，暂不参与混搭</p>
-                )}
+                {isUserModelId(model.id) && <p className="model-user-label">用户导入 · 专注收集</p>}
                 <p>
                   {model.totalStages} 个部件 · {model.totalStages} 次专注
                 </p>

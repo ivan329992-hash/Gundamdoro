@@ -6,6 +6,7 @@ import { getFinalAsset } from '../../mecha/loader'
 import { useAppStore } from '../../store/useAppStore'
 import { AssetImage } from '../Mecha/AssetImage'
 import { CompositeMecha } from '../Mecha/CompositeMecha'
+import { visibleHangarEntries } from '../../app/features'
 
 interface HangarScreenProps {
   onClose: () => void
@@ -21,7 +22,8 @@ const completedDate = new Intl.DateTimeFormat('zh-CN', {
 const focusedMinutes = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 })
 
 export function HangarScreen({ onClose }: HangarScreenProps) {
-  const hangar = useAppStore((state) => state.hangar)
+  const savedHangar = useAppStore((state) => state.hangar)
+  const hangar = visibleHangarEntries(savedHangar)
   const backButton = useRef<HTMLButtonElement>(null)
   const entries = groupHangar(hangar)
   const [selectedKey, setSelectedKey] = useState<string | null>(null)

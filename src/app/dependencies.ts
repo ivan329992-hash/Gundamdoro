@@ -8,6 +8,7 @@ import { registeredAssemblyPolicy } from '../adapters/assets/registeredAssembly'
 import { createUserModelLibrary } from '../adapters/catalog/userModelLibrary'
 import { userModelFiles } from '../adapters/storage/userModelFiles'
 import { createBackupPort } from '../adapters/storage/backupAssets'
+import { CUSTOM_ASSEMBLY_ENABLED } from './features'
 
 const userModels = createUserModelLibrary(bundledCatalog, bundledAssets, userModelFiles)
 
@@ -18,6 +19,7 @@ export const appDependencies: AppDependencies = {
   assembly: registeredAssemblyPolicy,
   models: userModels.library,
   backup: createBackupPort(userModels.assets),
+  workbenchEnabled: CUSTOM_ASSEMBLY_ENABLED,
 }
 
 export const appAssets = userModels.assets

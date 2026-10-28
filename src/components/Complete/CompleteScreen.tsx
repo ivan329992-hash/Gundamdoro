@@ -3,6 +3,7 @@ import { getMechaManifest, getFinalAsset } from '../../mecha/loader'
 import { useAppStore } from '../../store/useAppStore'
 import { AssetImage } from '../Mecha/AssetImage'
 import { groupHangar } from '../../domain/hangar'
+import { PARTS_ENTRY_LABEL, visibleHangarEntries } from '../../app/features'
 
 interface CompleteScreenProps {
   onOpenSettings: () => void
@@ -21,7 +22,7 @@ export function CompleteScreen({
   const totalFocusedMinutes = useAppStore((state) => state.totalFocusedMinutes)
   const resetMecha = useAppStore((state) => state.resetMecha)
   const persistenceStatus = useAppStore((state) => state.persistenceStatus)
-  const hangarCount = useAppStore((state) => groupHangar(state.hangar).length)
+  const hangarCount = useAppStore((state) => groupHangar(visibleHangarEntries(state.hangar)).length)
   const manifest = getMechaManifest(assembly.mechaId)
   const fullAsset = getFinalAsset(assembly.mechaId)
 
@@ -59,7 +60,7 @@ export function CompleteScreen({
           </button>
         </div>
         <button type="button" className="secondary-button" onClick={onOpenParts}>
-          配件仓库与拼装
+          {PARTS_ENTRY_LABEL}
         </button>
       </section>
     </main>

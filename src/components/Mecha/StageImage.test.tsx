@@ -43,12 +43,13 @@ describe('stage image presentation', () => {
     expect(getStagePresentation('missing-model', 1)).toBeNull()
   })
 
-  it('exposes the compatible assembly entry while retaining the inventory', () => {
+  it('retains inventory while hiding the paused assembly page', () => {
     const html = renderToStaticMarkup(
       <InventoryScreen onClose={() => {}} onOpenHangar={() => {}} />,
     )
     expect(html).toContain('配件仓库')
-    expect(html).toContain('自定义拼装')
+    expect(html).not.toContain('自定义拼装')
+    expect(html).not.toContain('assembly-tab')
     expect(html).not.toContain('随机搭配')
   })
 })

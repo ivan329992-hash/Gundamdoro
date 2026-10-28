@@ -38,6 +38,9 @@ export function createAppStore(dependencies: AppDependencies) {
       const change = (transition: (state: AppState) => AppData) => {
         if (get().backupOperation === 'idle') return set(transition)
       }
+      const changeWorkbench = (transition: (state: AppState) => AppData) => {
+        if (dependencies.workbenchEnabled !== false) return change(transition)
+      }
       const requireBackup = () => {
         if (get().backupOperation !== 'idle') throw new Error('数据操作正在进行，请稍候。')
         if (!canUseBackup(get().phase)) throw new Error('请在待机或制作完成后操作备份。')
@@ -119,13 +122,15 @@ export function createAppStore(dependencies: AppDependencies) {
         updateSettings: (settings) => change((state) => useCases.updateSettings(state, settings)),
         recoverState: (now) => change((state) => useCases.recoverState(state, now)),
         syncTimer: (now) => change((state) => useCases.syncTimer(state, now)),
-        prepareWorkbench: () => change((state) => workbench.prepareWorkbench(state)),
+        prepareWorkbench: () => changeWorkbench((state) => workbench.prepareWorkbench(state)),
         selectWorkbenchPart: (slot, partId) =>
-          change((state) => workbench.selectWorkbenchPart(state, slot, partId)),
-        clearWorkbenchPart: (slot) => change((state) => workbench.clearWorkbenchPart(state, slot)),
-        setWorkbenchName: (name) => change((state) => workbench.setWorkbenchName(state, name)),
-        randomizeWorkbench: () => change((state) => workbench.randomizeWorkbench(state)),
-        saveCustomBuild: () => change((state) => workbench.saveCustomBuild(state)),
+          changeWorkbench((state) => workbench.selectWorkbenchPart(state, slot, partId)),
+        clearWorkbenchPart: (slot) =>
+          changeWorkbench((state) => workbench.clearWorkbenchPart(state, slot)),
+        setWorkbenchName: (name) =>
+          changeWorkbench((state) => workbench.setWorkbenchName(state, name)),
+        randomizeWorkbench: () => changeWorkbench((state) => workbench.randomizeWorkbench(state)),
+        saveCustomBuild: () => changeWorkbench((state) => workbench.saveCustomBuild(state)),
       }
     },
     {

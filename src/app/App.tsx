@@ -30,6 +30,7 @@ import { appDependencies } from './dependencies'
 import { getPartDefinitions } from '../domain/inventory'
 import { PersistenceNotice } from '../components/Startup/PersistenceNotice'
 import { BackupScreen } from '../components/Settings/BackupScreen'
+import { CUSTOM_ASSEMBLY_ENABLED, PARTS_ENTRY_LABEL, visibleHangarEntries } from './features'
 
 export function App() {
   const reminderError = useTimerExperience()
@@ -109,10 +110,10 @@ function AppContent() {
   const prepareWorkbench = useAppStore((state) => state.prepareWorkbench)
   // 先通过用例准备工作台草稿，再打开配件页；此操作不发放配件或保存成品。
   const openParts = () => {
-    prepareWorkbench()
+    if (CUSTOM_ASSEMBLY_ENABLED) prepareWorkbench()
     setPartsOpen(true)
   }
-  const hangarCount = useAppStore((state) => groupHangar(state.hangar).length)
+  const hangarCount = useAppStore((state) => groupHangar(visibleHangarEntries(state.hangar)).length)
   // 交互统一调用 store 动作；可否执行、阶段切换和持久化由 store 及应用用例处理。
   const startFocus = useAppStore((state) => state.startFocus)
   const pauseTimer = useAppStore((state) => state.pauseTimer)
@@ -350,7 +351,7 @@ function AppContent() {
         )}
         {phase === 'READY' && (
           <button type="button" className="secondary-button workshop-entry" onClick={openParts}>
-            配件仓库与拼装（{ownedCount}）
+            {PARTS_ENTRY_LABEL}（{ownedCount}）
           </button>
         )}
       </section>

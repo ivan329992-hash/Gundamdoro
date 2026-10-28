@@ -5,7 +5,7 @@ import { APP_STORAGE_KEY, APP_STORAGE_VERSION } from '../../src/application/snap
 import { createDefaultData } from '../../src/application/state'
 import { createMechaCatalog } from '../../src/domain/catalog'
 import { getPartDefinitions } from '../../src/domain/inventory'
-import type { AppData, MechaManifest } from '../../src/domain/types'
+import type { AppData, Composition, MechaManifest } from '../../src/domain/types'
 import { createFakeApp } from '../../src/test/fakeApp'
 
 declare global {
@@ -58,13 +58,32 @@ export async function configureTimer(page: Page, focusMinutes = 1): Promise<void
 }
 
 /** 仅为工作台测试准备已有永久库存；专注解锁另由完整循环用例实走验证。 */
-export async function seedOwnedParts(page: Page): Promise<void> {
+export async function seedOwnedParts(page: Page, legacyCustom = false): Promise<void> {
   const manifest = JSON.parse(
     readFileSync(new URL('../../src/mecha/mecha-01/manifest.json', import.meta.url), 'utf8'),
   ) as MechaManifest
   const catalog = createMechaCatalog([manifest], manifest.id)
   const state = createDefaultData({ ...createFakeApp(1000).dependencies, catalog })
   state.unlockedParts = getPartDefinitions(catalog).map((part) => part.id)
+  if (legacyCustom) {
+    const parts = Object.fromEntries(
+      getPartDefinitions(catalog).map((part) => [part.slot, part.id]),
+    ) as Composition
+    state.workbench = { id: 'e2e-legacy-custom', name: '历史自定义作品', parts }
+    state.hangar = [
+      {
+        id: 'e2e-legacy-custom',
+        kind: 'custom',
+        mechaId: 'custom',
+        mechaName: '历史自定义作品',
+        completedAt: 1000,
+        completedFocusSessions: 0,
+        totalFocusedMinutes: 0,
+        composition: parts,
+        assemblyProfile: 'standard-front-v4',
+      },
+    ]
+  }
   state.settings = {
     focusMinutes: 1,
     breakMinutes: 60,

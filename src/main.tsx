@@ -8,6 +8,7 @@ import { initializeAppStore } from './store/createAppStore'
 import { StartupScreen } from './components/Startup/StartupScreen'
 import { isMiniWindow } from './adapters/platform/miniWindow'
 import { MiniTimerWindow } from './components/Timer/MiniTimer'
+import { CUSTOM_ASSEMBLY_ENABLED } from './app/features'
 
 const root = createRoot(document.getElementById('root')!)
 let starting = false
@@ -44,7 +45,11 @@ async function startApp() {
   }
 }
 
-if (import.meta.env.DEV && new URLSearchParams(window.location.search).has('assembly-lab')) {
+if (
+  import.meta.env.DEV &&
+  CUSTOM_ASSEMBLY_ENABLED &&
+  new URLSearchParams(window.location.search).has('assembly-lab')
+) {
   void import('./dev/AssemblyLab').then(({ default: AssemblyLab }) => root.render(<AssemblyLab />))
 } else if (isMiniWindow()) root.render(<MiniTimerWindow />)
 else void startApp()
