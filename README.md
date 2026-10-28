@@ -117,7 +117,29 @@ npx tauri build --bundles msi
 
 `npm run lint` 检查源码及测试中的常见错误和未使用变量；`npm run format:check` 检查统一格式，`npm run format` 自动整理 TypeScript、TSX、CSS、测试与根目录配置文件。素材、机型 JSON、Rust 和本地文档不在该格式化命令的范围内。
 
-只检查类型可运行 `npx tsc -b`。构建后的网页可用 `npm run preview` 预览，具体地址以终端输出为准。
+只检查类型可运行 `npx tsc -b`，范围包含应用、构建配置和浏览器回归测试。构建后的网页可用 `npm run preview` 预览，具体地址以终端输出为准。
+
+### 可重复的浏览器回归
+
+首次安装依赖后下载测试浏览器，再运行回归；不需要提前启动开发服务器：
+
+```powershell
+npx playwright install chromium
+npm run test:e2e
+```
+
+测试自动启动专用的 `127.0.0.1:1430` 服务，使用开发快速模式和独立临时浏览器上下文，在 420 × 640、480 × 720 两种尺寸下运行。覆盖设置弹窗键盘隔离、完整专注/休息/手动拼装、完成页与工作台保存失败重试、机型图片上传/配件排序/刷新恢复，以及构建产物不会刷新页面。不会读取日常浏览器或桌面版的存档；端口已占用时直接失败，不接管或关闭现有服务。
+
+`npm test` 仍只运行 Vitest；`tests/e2e/*.e2e.ts` 由 Playwright 单独执行。工作台用例会在其临时上下文准备库存夹具，真实解锁由完整专注循环用例验证；测试不向产品添加解锁后门，也不依赖浏览器内的 store 模块导入。
+
+结果保存在已忽略的 `output/playwright/`：每轮会重建专用的 `test-results/` 和 `report/`，失败时保留截图与 trace；不要把需要长期保留的文件手动放入这两个目录。查看最近报告或单独重跑一个尺寸：
+
+```powershell
+npx playwright show-report output/playwright/report
+npm run test:e2e -- --project=chromium-420
+```
+
+浏览器回归不代替真实 Tauri 最小化、系统通知、休眠唤醒和安装包验收。Linux CI 如缺少浏览器系统库，可在 CI 环境使用 `npx playwright install --with-deps chromium`；不要把它当作日常开发的全局依赖升级命令。
 
 ## 开发调试入口
 
@@ -142,7 +164,7 @@ Gundamdoro/
 │  ├─ app/                      # 根界面与依赖装配
 │  ├─ components/               # React 展示与交互
 │  │  ├─ Mecha/                 # 选型、机型导入、配件展示、奖励、拼装与渲染器
-│  │  ├─ Timer/                 # 预计结束时间、提醒协调与迷你计时器
+│  │  ├─ Timer/                 # 预计结束时间、迷你计时器与控制界面
 │  │  ├─ Inventory/             # 配件仓库与自定义工作台
 │  │  ├─ Hangar/                # 成品仓库与机体详情
 │  │  ├─ Break/                 # 休息页面
@@ -150,7 +172,7 @@ Gundamdoro/
 │  │  ├─ Settings/              # 设置弹窗
 │  │  ├─ Startup/               # 启动重试、运行期保存失败与重试提示
 │  │  └─ shared/                # 共用原生模态框
-│  ├─ hooks/                    # 计时刷新、阶段完成调度、固定栏空间测量
+│  ├─ hooks/                    # 计时刷新、提醒/窗口连接、阶段调度、固定栏空间测量
 │  ├─ store/                    # Zustand 门面、工厂、动作映射与存档接入
 │  ├─ application/              # 用例、端口、快照迁移、计时投影
 │  ├─ domain/                   # 纯业务规则、类型、目录与二维变换数学
@@ -170,7 +192,8 @@ Gundamdoro/
 │  ├─ icons/                    # 安装包及应用图标
 │  ├─ Cargo.toml / Cargo.lock   # Rust 依赖与锁文件
 │  └─ tauri.conf.json           # 窗口、开发地址、打包配置
-├─ tests/                       # 模块边界与素材完整性测试
+├─ tests/                       # 模块/开发边界与素材完整性测试
+│  └─ e2e/                     # 独立执行的关键浏览器交互回归
 ├─ public/                      # 网站图标等静态资源
 ├─ docs/                        # 仅本地文档，不随 Git 分发；入口 docs/README.md
 │  ├─ architecture/             # 架构与模块边界
@@ -181,10 +204,11 @@ Gundamdoro/
 ├─ AGENTS.md                    # 仓库开发约束
 ├─ package.json / package-lock.json
 ├─ vite.config.ts               # React 插件与固定开发端口
+├─ playwright.config.ts         # 浏览器回归尺寸、独立服务与报告配置
 └─ README.md
 ```
 
-大部分测试与源码同目录，命名为 `*.test.ts` 或 `*.test.tsx`；根目录的 `tests/` 不是唯一测试入口。`dist/`、`src-tauri/target/`、`output/` 和测试缓存属于生成产物，不提交到 Git。
+大部分测试与源码同目录，命名为 `*.test.ts` 或 `*.test.tsx`；根目录的 `tests/` 不是唯一测试入口。`dist/`、`src-tauri/target/`、`output/` 和测试缓存属于生成产物，不提交到 Git。Vite 不监听 Rust 构建/生成目录、测试输出及浏览器诊断目录，避免这些产物触发页面刷新。
 
 ### 分层与依赖方向
 
@@ -218,7 +242,7 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 | 用户机型表单、导入与本地素材 | [ModelImportScreen.tsx](src/components/Mecha/ModelImportScreen.tsx)、[importModel.ts](src/application/importModel.ts)、[userModelFiles.ts](src/adapters/storage/userModelFiles.ts) |
 | 拼装策略、关节变换与图层绘制 | [assembly.ts](src/domain/assembly.ts)、[registeredAssembly.ts](src/adapters/assets/registeredAssembly.ts)、[RegisteredMecha.tsx](src/components/Mecha/RegisteredMecha.tsx) |
 | 仓库分组与机体故事 | [hangar.ts](src/domain/hangar.ts)、[profiles.ts](src/mecha/profiles.ts) |
-| 预计结束、完成提醒和桌面迷你窗口 | [timerExperience.ts](src/application/timerExperience.ts)、[reminders.ts](src/adapters/platform/reminders.ts)、[miniWindow.ts](src/adapters/platform/miniWindow.ts) |
+| 预计结束、完成提醒和桌面迷你窗口 | [useTimerExperience.ts](src/hooks/useTimerExperience.ts)、[timerExperience.ts](src/application/timerExperience.ts)、[reminders.ts](src/adapters/platform/reminders.ts)、[miniWindow.ts](src/adapters/platform/miniWindow.ts) |
 
 `useAppStore.ts` 是默认状态门面；计时函数与共享类型直接从 `domain/timer.ts`、`domain/types.ts` 引入，不再经过旧转发入口。`mecha/loader.ts` 保留模型与图片查询职责；自定义拼装已正式开放，不再使用恒开启的临时功能开关。
 

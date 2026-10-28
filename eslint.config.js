@@ -11,7 +11,7 @@ export default [
   },
   ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{ts,tsx}', '*.ts'],
+    files: ['src/**/*.{ts,tsx}', 'tests/**/*.ts', '*.ts'],
     languageOptions: { globals: globals.browser },
     rules: {
       '@typescript-eslint/no-unused-vars': [
@@ -19,5 +19,9 @@ export default [
         { argsIgnorePattern: '^_', ignoreRestSiblings: true },
       ],
     },
+  },
+  {
+    files: ['tests/e2e/**/*.ts', 'playwright.config.ts'],
+    languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
 ]
