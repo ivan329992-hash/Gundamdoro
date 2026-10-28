@@ -29,6 +29,7 @@ import { prepareSound } from '../adapters/platform/reminders'
 import { appDependencies } from './dependencies'
 import { getPartDefinitions } from '../domain/inventory'
 import { PersistenceNotice } from '../components/Startup/PersistenceNotice'
+import { BackupScreen } from '../components/Settings/BackupScreen'
 
 export function App() {
   const reminderError = useTimerExperience()
@@ -62,6 +63,7 @@ function AppContent() {
   const updateSettings = useAppStore((state) => state.updateSettings)
   // 这些开关只控制当前窗口的页面和弹窗，不写入业务存档，也不新增业务阶段。
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [backupOpen, setBackupOpen] = useState(false)
   const [hangarOpen, setHangarOpen] = useState(false)
   const [modelsOpen, setModelsOpen] = useState(false)
   const [partsOpen, setPartsOpen] = useState(false)
@@ -135,10 +137,17 @@ function AppContent() {
         setSettingsOpen(false)
       }}
       onClose={() => setSettingsOpen(false)}
+      onOpenBackup={() => {
+        setSettingsOpen(false)
+        setBackupOpen(true)
+      }}
     />
   )
 
   // 辅助页面优先于阶段页面，以下 return 顺序决定显示优先级；打开它们不暂停或切换业务阶段。
+  if (backupOpen && (phase === 'READY' || phase === 'COMPLETE')) {
+    return <BackupScreen onClose={() => setBackupOpen(false)} />
+  }
   // 配件仓库与工作台仅在 READY/COMPLETE 可显示，保存后的仓库快捷入口关闭工作台再打开成品仓库。
   if (partsOpen && (phase === 'READY' || phase === 'COMPLETE')) {
     return (

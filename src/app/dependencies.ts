@@ -7,6 +7,7 @@ import type { AppDependencies } from '../application/ports'
 import { registeredAssemblyPolicy } from '../adapters/assets/registeredAssembly'
 import { createUserModelLibrary } from '../adapters/catalog/userModelLibrary'
 import { userModelFiles } from '../adapters/storage/userModelFiles'
+import { createBackupPort } from '../adapters/storage/backupAssets'
 
 const userModels = createUserModelLibrary(bundledCatalog, bundledAssets, userModelFiles)
 
@@ -16,6 +17,7 @@ export const appDependencies: AppDependencies = {
   storage: getBrowserStorage,
   assembly: registeredAssemblyPolicy,
   models: userModels.library,
+  backup: createBackupPort(userModels.assets),
 }
 
 export const appAssets = userModels.assets

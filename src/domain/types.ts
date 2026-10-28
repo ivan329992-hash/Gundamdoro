@@ -1,6 +1,7 @@
 /** 【领域·字典】全应用共享类型：相位、机甲清单、机库记录、AppData/AppActions。先读这个文件。 */
 import type { TimerState } from './timer'
 import type { UserModelDraft } from './userModels'
+import type { BackupOperation, BackupPlan } from './backup'
 
 export type AppPhase = 'READY' | 'FOCUS' | 'PART_REWARD' | 'ASSEMBLY' | 'BREAK' | 'COMPLETE'
 
@@ -86,6 +87,10 @@ export interface AppData {
 }
 
 export interface AppActions {
+  exportBackup: () => Promise<Uint8Array>
+  inspectBackup: (bytes: Uint8Array) => Promise<void>
+  restoreBackup: () => Promise<void>
+  clearBackupPreview: () => void
   retryPersistence: () => void
   importModel: (draft: UserModelDraft) => Promise<string>
   selectMecha: (mechaId: string) => void
@@ -115,4 +120,9 @@ export interface AppActions {
 export type PersistenceStatus = 'saved' | 'saving' | 'error'
 
 /** 保存状态只存在于运行期，不加入进度快照。 */
-export type AppState = AppData & AppActions & { persistenceStatus: PersistenceStatus }
+export type AppState = AppData &
+  AppActions & {
+    persistenceStatus: PersistenceStatus
+    backupOperation: BackupOperation
+    backupPlan: BackupPlan | null
+  }

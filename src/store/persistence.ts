@@ -10,10 +10,12 @@ export function trackPersistence(
   let pending: Promise<void> | null = null
   let lastSaved: StorageValue<AppData> | null = null
   let strict = false
+  let replacing = false
 
   const tracked: PersistStorage<AppData> = {
     ...storage,
     setItem(key, value) {
+      if (replacing) return
       const previous = lastSaved
       const fields = Object.keys(value.state) as (keyof AppData)[]
       if (
@@ -61,6 +63,23 @@ export function trackPersistence(
 
   return {
     storage: tracked,
+    async replace(key: string, value: StorageValue<AppData>): Promise<void> {
+      if (replacing) throw new Error('进度恢复正在进行。')
+      replacing = true
+      ++revision
+      onStatus('saving')
+      try {
+        if (pending) await pending
+        await storage.setItem(key, value)
+        lastSaved = value
+        onStatus('saved')
+      } catch (cause) {
+        onStatus('error')
+        throw cause
+      } finally {
+        replacing = false
+      }
+    },
     setStrict: (value: boolean) => {
       strict = value
     },

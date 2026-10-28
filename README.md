@@ -12,7 +12,7 @@ Gundamdoro 是一款 Windows 桌面番茄钟：每完成一次专注，解锁一
 - **收集与拼装**：每次完成专注只收集一个配件，非最后一个配件展示后进入休息；集齐后手动拼装，成品自动入库。
 - **永久配件与自定义机体**：解锁不消耗、不叠加数量；七个必选身体槽位可跨机型搭配，并可选装已拥有的飞翼零式翅膀。
 - **机体仓库与档案**：相同固定机型按一张卡片展示，保留每次完成记录；详情提供机体故事、设计设定和个人累计记录。
-- **桌面与存档**：支持最小化后的桌面迷你计时器、完成提示音、可选系统通知，以及本地存档和重启恢复。
+- **桌面与存档**：支持桌面迷你计时器、完成提醒、本地存档和重启恢复；可手动导出、恢复包含用户机型图片的完整备份。
 
 主流程：
 
@@ -128,7 +128,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-测试自动启动专用的 `127.0.0.1:1430` 服务，使用开发快速模式和独立临时浏览器上下文，在 420 × 640、480 × 720 两种尺寸下运行。覆盖设置弹窗键盘隔离、完整专注/休息/手动拼装、完成页与工作台保存失败重试、机型图片上传/配件排序/刷新恢复，以及构建产物不会刷新页面。不会读取日常浏览器或桌面版的存档；端口已占用时直接失败，不接管或关闭现有服务。
+测试自动启动专用的 `127.0.0.1:1430` 服务，使用开发快速模式和独立临时浏览器上下文，在 420 × 640、480 × 720 两种尺寸下运行。覆盖设置弹窗键盘隔离、完整专注/休息/手动拼装、保存失败重试、机型图片上传/刷新恢复、完整备份跨上下文恢复与损坏文件拒绝，以及构建产物不会刷新页面。不会读取日常浏览器或桌面版的存档；端口已占用时直接失败，不接管或关闭现有服务。
 
 `npm test` 仍只运行 Vitest；`tests/e2e/*.e2e.ts` 由 Playwright 单独执行。工作台用例会在其临时上下文准备库存夹具，真实解锁由完整专注循环用例验证；测试不向产品添加解锁后门，也不依赖浏览器内的 store 模块导入。
 
@@ -169,7 +169,7 @@ Gundamdoro/
 │  │  ├─ Hangar/                # 成品仓库与机体详情
 │  │  ├─ Break/                 # 休息页面
 │  │  ├─ Complete/              # 完成页面
-│  │  ├─ Settings/              # 设置弹窗
+│  │  ├─ Settings/              # 设置弹窗、本地备份与恢复
 │  │  ├─ Startup/               # 启动重试、运行期保存失败与重试提示
 │  │  └─ shared/                # 共用原生模态框
 │  ├─ hooks/                    # 计时刷新、提醒/窗口连接、阶段调度、固定栏空间测量
@@ -178,7 +178,7 @@ Gundamdoro/
 │  ├─ domain/                   # 纯业务规则、类型、目录与二维变换数学
 │  ├─ adapters/
 │  │  ├─ platform/              # 时钟、调度、提醒、桌面窗口适配
-│  │  ├─ storage/               # 进度 localStorage 与用户机型文件库
+│  │  ├─ storage/               # 进度、用户机型文件库、备份文件读写与校验
 │  │  ├─ catalog/               # 内置 manifest 发现、用户机型目录合并
 │  │  └─ assets/                # 素材解析、展示裁切、拼装布局与历史配置
 │  ├─ mecha/                    # 模型清单、展示元数据、机体档案设定
@@ -240,6 +240,7 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 | 配件所有权、自定义草稿与保存 | [inventory.ts](src/domain/inventory.ts)、[workbench.ts](src/application/workbench.ts) |
 | 存档校验和旧版本迁移 | [snapshot.ts](src/application/snapshot.ts)、[splitPartsMigration.ts](src/application/splitPartsMigration.ts) |
 | 用户机型表单、导入与本地素材 | [ModelImportScreen.tsx](src/components/Mecha/ModelImportScreen.tsx)、[importModel.ts](src/application/importModel.ts)、[userModelFiles.ts](src/adapters/storage/userModelFiles.ts) |
+| 完整备份、覆盖恢复与文件校验 | [BackupScreen.tsx](src/components/Settings/BackupScreen.tsx)、[backup.ts](src/application/backup.ts)、[backupFile.ts](src/adapters/storage/backupFile.ts) |
 | 拼装策略、关节变换与图层绘制 | [assembly.ts](src/domain/assembly.ts)、[registeredAssembly.ts](src/adapters/assets/registeredAssembly.ts)、[RegisteredMecha.tsx](src/components/Mecha/RegisteredMecha.tsx) |
 | 仓库分组与机体故事 | [hangar.ts](src/domain/hangar.ts)、[profiles.ts](src/mecha/profiles.ts) |
 | 预计结束、完成提醒和桌面迷你窗口 | [useTimerExperience.ts](src/hooks/useTimerExperience.ts)、[timerExperience.ts](src/application/timerExperience.ts)、[reminders.ts](src/adapters/platform/reminders.ts)、[miniWindow.ts](src/adapters/platform/miniWindow.ts) |
@@ -270,7 +271,17 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 
 运行期间写入失败会保留当前窗口内的进度，并显示“进度尚未保存到本机”和重试入口；完成页与拼装页也不会误报保存成功。检查空间或存储权限后点击“重试保存”，成功前请勿关闭或刷新。运行期保存状态不加入版本 8 的十个存档字段，异步存储按顺序写入，避免旧快照覆盖新进度。
 
-网页存档随浏览器、用户配置和站点 origin 隔离，换端口、协议或使用桌面版都不会自动搬迁。当前没有存档导出/导入或云端备份界面，清理站点数据可能丢失本地进度。
+网页存档随浏览器、用户配置和站点 origin 隔离，换端口、协议或使用桌面版都不会自动搬迁。可通过下述完整备份手动迁移；清理站点数据前应先导出并确认文件保存成功。
+
+### 备份与恢复
+
+在待机或制作完成页面打开“设置 → 备份与恢复”。“导出完整备份”生成一个 `.gundamdoro` 文件，包含当前进度、永久配件、成品仓库、拼装草稿、设置，以及所有导入的机型和图片；内置素材不重复打包。文件最多 128 MiB、32 个用户机型，单张图片与单套素材仍受导入限制约束。
+
+恢复时先选择文件、查看摘要，再勾选覆盖确认并点击“确认恢复备份”。恢复会替换当前进度、仓库、草稿和设置，**不合并统计**；请先导出当前数据。已有机型素材只补充、不删除，同 ID 的清单与图片完全一致时复用，内容冲突则拒绝恢复。
+
+素材补充失败不会提交进度；进度写入失败也不会替换当前内存进度。已经成功补充的机型素材会保留，解除空间或存储权限问题后可重试。恢复期间请勿关闭或刷新，成功后可返回应用查看。
+
+备份文件做完整性校验但**未加密**，请妥善保存私人记录和图片。首版使用备份容器 v1 和进度 v8，需要兼容的程序及内置素材；只能在应用正常启动后恢复，不能修复阻止启动的机型资源库损坏。备份属于手动本地文件，不提供自动备份或云端同步；系统保存位置由浏览器或桌面系统决定。
 
 ## 扩展机型与功能
 
@@ -288,7 +299,7 @@ appAssets / appScheduler → 提供素材解析和阶段调度能力
 
 | 文档 | 内容 |
 | --- | --- |
-| [SPEC.md](SPEC.md) / [AGENTS.md](AGENTS.md) | 需求、已批准变更与工程约束；早期五组件和禁止导入描述以第 26、31–34 节为准 |
+| [SPEC.md](SPEC.md) / [AGENTS.md](AGENTS.md) | 需求、已批准变更与工程约束；早期五组件和禁止导入描述以第 26、31–35 节为准 |
 | [拼装素材来源](src/assets/mecha/ASSEMBLY_SOURCES.md) | 母图来源与非官方素材边界，不含完整制作提示词 |
 
 详细架构、机型设计、制作提示词和历史验收记录仅保存在本地 `docs/`，入口为 `docs/README.md`；该目录已加入忽略规则，不随 Git 分发，也不是运行或构建的依赖。新克隆的项目不会包含这些文件，需要自行备份和恢复。历史验收记录中的组件数、版本和测试数量不应当作当前版本配置。

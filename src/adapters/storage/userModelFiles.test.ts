@@ -47,6 +47,9 @@ class MemoryDirectory {
   async *entries() {
     for (const entry of this.directories.entries()) yield entry
   }
+  async removeEntry(name: string) {
+    this.directories.delete(name)
+  }
 }
 
 function filesystem() {
@@ -66,6 +69,30 @@ afterEach(() => {
 })
 
 describe('local user model file repository', () => {
+  it('cleans only its failed new directory and permits retrying the same backup model ID', async () => {
+    const root = filesystem()
+    const library = await root.getDirectoryHandle('gundamdoro-user-models', { create: true })
+    let fail = true
+    vi.spyOn(library, 'getDirectoryHandle').mockImplementation(async (name, options) => {
+      const directory = await MemoryDirectory.prototype.getDirectoryHandle.call(
+        library,
+        name,
+        options,
+      )
+      if (fail && options?.create) {
+        directory.failWrite = 'manifest.json'
+        fail = false
+      }
+      return directory
+    })
+    const model = createUserModelPackage(draftModel(), 'user-retry')
+    await expect(userModelFiles.save(model)).rejects.toThrow('quota')
+    expect(library.directories.has(model.manifest.id)).toBe(false)
+    await userModelFiles.save(model)
+    expect((await userModelFiles.load())[0].manifest).toEqual(model.manifest)
+    await expect(userModelFiles.save(model)).rejects.toThrow('不能覆盖')
+    expect(library.directories.has(model.manifest.id)).toBe(true)
+  })
   it('does not create storage for an empty library, saves separate binaries and rebuilds URLs on restart', async () => {
     const root = filesystem()
     expect(await userModelFiles.load()).toEqual([])

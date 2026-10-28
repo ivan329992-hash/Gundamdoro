@@ -2,6 +2,8 @@
 import type { MechaCatalog } from '../domain/catalog'
 import type { AssemblyPolicy } from '../domain/assembly'
 import type { UserModelPackage } from '../domain/userModels'
+import type { MechaManifest } from '../domain/types'
+import type { LocalBackup } from '../domain/backup'
 
 export interface RuntimePort {
   now(): number
@@ -36,4 +38,11 @@ export interface AppDependencies {
   storage: () => KeyValueStorage
   assembly?: AssemblyPolicy
   models?: UserModelLibrary
+  backup?: BackupPort
+}
+
+export interface BackupPort {
+  readModel(model: MechaManifest): Promise<UserModelPackage>
+  encode(backup: LocalBackup): Promise<Uint8Array>
+  decode(bytes: Uint8Array): Promise<LocalBackup>
 }

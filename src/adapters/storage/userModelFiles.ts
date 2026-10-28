@@ -93,33 +93,41 @@ const browserRepository: UserModelRepository = {
     }
   },
   async save(model) {
-    const manifest = validateUserManifest(model.manifest)
-    const root = (await browserRoot(true))!
-    let exists = false
-    try {
-      await root.getDirectoryHandle(manifest.id)
-      exists = true
-    } catch (error) {
-      if (!missing(error)) throw error
-    }
-    if (exists) throw new Error('机型目录已存在，不能覆盖。')
-    const directory = await root.getDirectoryHandle(manifest.id, { create: true })
-    const assets: Record<string, string> = {}
-    try {
-      for (const name of [manifest.finalAsset, ...manifest.stages.map((part) => part.asset)]) {
-        const bytes = model.images[name]
-        if (!bytes) throw new Error('待导入素材缺失。')
-        const blob = new Blob([bytes.slice().buffer], { type: mediaType(name) })
-        await writeFile(directory, name, blob)
-        assets[name] = URL.createObjectURL(blob)
+    const save = async () => {
+      const manifest = validateUserManifest(model.manifest)
+      const root = (await browserRoot(true))!
+      let exists = false
+      try {
+        await root.getDirectoryHandle(manifest.id)
+        exists = true
+      } catch (error) {
+        if (!missing(error)) throw error
       }
-      // 清单最后写入；没有清单的未完成目录不会进入机型库。
-      await writeFile(directory, 'manifest.json', JSON.stringify({ version: 1, manifest }))
-      return { manifest, assets }
-    } catch (error) {
-      Object.values(assets).forEach((url) => URL.revokeObjectURL(url))
-      throw error
+      if (exists) throw new Error('机型目录已存在，不能覆盖。')
+      const directory = await root.getDirectoryHandle(manifest.id, { create: true })
+      const assets: Record<string, string> = {}
+      try {
+        for (const name of [manifest.finalAsset, ...manifest.stages.map((part) => part.asset)]) {
+          const bytes = model.images[name]
+          if (!bytes) throw new Error('待导入素材缺失。')
+          const blob = new Blob([bytes.slice().buffer], { type: mediaType(name) })
+          await writeFile(directory, name, blob)
+          assets[name] = URL.createObjectURL(blob)
+        }
+        // 清单最后写入；没有清单的未完成目录不会进入机型库。
+        await writeFile(directory, 'manifest.json', JSON.stringify({ version: 1, manifest }))
+        return { manifest, assets }
+      } catch (error) {
+        Object.values(assets).forEach((url) => URL.revokeObjectURL(url))
+        // 只清理本次新建且尚未提交的目录，让相同备份可以在故障解除后重试。
+        await root.removeEntry(manifest.id, { recursive: true }).catch(() => {})
+        throw error
+      }
     }
+    // 同源窗口串行写入，避免失败清理碰到另一个窗口刚提交的同 ID 机型。
+    return navigator.locks?.request
+      ? navigator.locks.request('gundamdoro-user-model-write', () => save())
+      : save()
   },
 }
 

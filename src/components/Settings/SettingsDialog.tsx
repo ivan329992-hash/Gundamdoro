@@ -11,6 +11,7 @@ interface SettingsDialogProps {
   preferences?: Settings
   onSave: (focusMinutes: number, breakMinutes: number, preferences: Partial<Settings>) => void
   onClose: () => void
+  onOpenBackup?: () => void
 }
 
 export function SettingsDialog({
@@ -20,6 +21,7 @@ export function SettingsDialog({
   preferences,
   onSave,
   onClose,
+  onOpenBackup,
 }: SettingsDialogProps) {
   const [focusValue, setFocusValue] = useState(String(focusMinutes))
   const [breakValue, setBreakValue] = useState(String(breakMinutes))
@@ -148,6 +150,19 @@ export function SettingsDialog({
         <button type="submit" disabled={saving}>
           {saving ? '正在保存…' : '保存设置'}
         </button>
+        {onOpenBackup && (
+          <div className="settings-backup-entry">
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={saving}
+              onClick={onOpenBackup}
+            >
+              备份与恢复
+            </button>
+            <p className="settings-hint">备份前请先保存本页的设置修改。</p>
+          </div>
+        )}
       </form>
     </Dialog>
   )
