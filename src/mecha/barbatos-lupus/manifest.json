@@ -1,0 +1,81 @@
+{
+  "id": "barbatos-lupus",
+  "name": "巴巴托斯天狼座",
+  "description": "MG 参考版 · 非官方同人",
+  "totalStages": 12,
+  "finalAsset": "final/assembled-v1.png",
+  "stages": [
+    {
+      "stage": 1,
+      "name": "TORSO",
+      "asset": "parts/upper-atlas-v1.png",
+      "slot": "torso"
+    },
+    {
+      "stage": 2,
+      "name": "HEAD",
+      "asset": "parts/upper-atlas-v1.png",
+      "slot": "head"
+    },
+    {
+      "stage": 3,
+      "name": "LEFT ARM",
+      "asset": "parts/upper-atlas-v1.png",
+      "slot": "left-arm"
+    },
+    {
+      "stage": 4,
+      "name": "RIGHT ARM",
+      "asset": "parts/upper-atlas-v1.png",
+      "slot": "right-arm"
+    },
+    {
+      "stage": 5,
+      "name": "HIP UNIT",
+      "asset": "parts/lower-atlas-v1.png",
+      "slot": "hips"
+    },
+    {
+      "stage": 6,
+      "name": "LEFT LEG",
+      "asset": "parts/lower-atlas-v1.png",
+      "slot": "left-leg"
+    },
+    {
+      "stage": 7,
+      "name": "RIGHT LEG",
+      "asset": "parts/lower-atlas-v1.png",
+      "slot": "right-leg"
+    },
+    {
+      "stage": 8,
+      "name": "WAIST THRUSTERS",
+      "asset": "parts/equipment-atlas-v1.png",
+      "partId": "waist-thrusters"
+    },
+    {
+      "stage": 9,
+      "name": "BACKPACK",
+      "asset": "parts/lower-atlas-v1.png",
+      "partId": "backpack"
+    },
+    {
+      "stage": 10,
+      "name": "SWORD MACE",
+      "asset": "parts/equipment-atlas-v1.png",
+      "partId": "sword-mace"
+    },
+    {
+      "stage": 11,
+      "name": "TWIN MACES",
+      "asset": "parts/equipment-atlas-v1.png",
+      "partId": "twin-maces"
+    },
+    {
+      "stage": 12,
+      "name": "200mm ARM GUNS",
+      "asset": "parts/equipment-atlas-v1.png",
+      "partId": "arm-guns"
+    }
+  ]
+}

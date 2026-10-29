@@ -5,6 +5,7 @@ import { AssetImage } from '../Mecha/AssetImage'
 import { CompositeMecha } from '../Mecha/CompositeMecha'
 import { getCompositionSlots, getPartDefinitions, PART_SLOT_LABELS } from '../../domain/inventory'
 import { appDependencies } from '../../app/dependencies'
+import { CanonDossier } from './CanonDossier'
 
 const date = (value: number | null) =>
   value === null ? '未记录' : new Date(value).toLocaleDateString('zh-CN')
@@ -127,8 +128,9 @@ export function MechaDetail({ group }: { group: HangarGroup }) {
             </ul>
           )}
         </section>
+        {profile?.canon && <CanonDossier canon={profile.canon} />}
         <section className="dossier-panel" aria-labelledby="record-title">
-          <h3 id="record-title">03 / 我的制作记录</h3>
+          <h3 id="record-title">{profile?.canon ? '05' : '03'} / 我的制作记录</h3>
           <dl className="dossier-facts">
             <div>
               <dt>累计完成</dt>

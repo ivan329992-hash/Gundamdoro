@@ -228,6 +228,72 @@
   font-size: 12px;
   line-height: 1.9;
 }
+.dossier-pilot {
+  padding: 16px;
+  border-left: 2px solid var(--color-accent-bright);
+  background: linear-gradient(110deg, #1b373b, #14232c);
+}
+.dossier-pilot-label,
+.dossier-event-context {
+  color: #83c5bc;
+  font: 10px monospace;
+  letter-spacing: 0.08em;
+}
+.dossier-pilot h4 {
+  margin: 10px 0 6px;
+  font-size: 22px;
+  color: var(--color-secondary);
+}
+.dossier-affiliation {
+  margin: 0 0 12px;
+  color: #9eb7c1;
+  font-size: 12px;
+}
+.dossier-debut {
+  margin: 18px 0 0;
+  font-size: 12px;
+}
+.dossier-debut dt {
+  margin-bottom: 10px;
+  color: #94a9b7;
+}
+.dossier-debut dd {
+  margin: 0;
+  color: #c1cfd8;
+  line-height: 1.8;
+}
+.dossier-debut dd p {
+  margin: 6px 0 0;
+  color: #9eb7c1;
+}
+.dossier-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 12px;
+  border-left: 1px solid #3c6567;
+}
+.dossier-timeline li {
+  position: relative;
+  padding: 0 0 22px 10px;
+}
+.dossier-timeline li:last-child {
+  padding-bottom: 0;
+}
+.dossier-timeline li::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 4px;
+  width: 7px;
+  height: 7px;
+  background: var(--color-accent-bright);
+  box-shadow: 0 0 0 4px #14282e;
+}
+.dossier-timeline h4 {
+  margin: 8px 0;
+  color: #dcebe9;
+  font-size: 14px;
+}
 .dossier-ratings {
   display: grid;
   gap: 12px;

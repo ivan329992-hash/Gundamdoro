@@ -1,0 +1,226 @@
+{
+  "1": [
+    {
+      "asset": "parts/torso-atlas-v1.png",
+      "label": "躯干",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        0,
+        580,
+        700
+      ]
+    }
+  ],
+  "2": [
+    {
+      "asset": "parts/upper-atlas-v1.png",
+      "label": "头部",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        550,
+        80,
+        536,
+        610
+      ]
+    }
+  ],
+  "3": [
+    {
+      "asset": "parts/upper-atlas-v1.png",
+      "label": "左臂",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        30,
+        740,
+        470,
+        708
+      ]
+    }
+  ],
+  "4": [
+    {
+      "asset": "parts/upper-atlas-v1.png",
+      "label": "右臂",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        600,
+        740,
+        460,
+        708
+      ]
+    }
+  ],
+  "5": [
+    {
+      "asset": "parts/lower-atlas-v1.png",
+      "label": "腰胯",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        130,
+        600,
+        530
+      ]
+    }
+  ],
+  "6": [
+    {
+      "asset": "parts/lower-atlas-v1.png",
+      "label": "左腿",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        650,
+        0,
+        436,
+        770
+      ]
+    }
+  ],
+  "7": [
+    {
+      "asset": "parts/lower-atlas-v1.png",
+      "label": "右腿",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        730,
+        520,
+        718
+      ]
+    }
+  ],
+  "8": [
+    {
+      "asset": "parts/strikers-atlas-v1.png",
+      "label": "空战背包",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        0,
+        600,
+        690
+      ]
+    }
+  ],
+  "9": [
+    {
+      "asset": "parts/strikers-atlas-v1.png",
+      "label": "炮装组件",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        600,
+        0,
+        486,
+        750
+      ]
+    }
+  ],
+  "10": [
+    {
+      "asset": "parts/strikers-atlas-v1.png",
+      "label": "剑装组件",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        700,
+        543,
+        748
+      ]
+    }
+  ],
+  "11": [
+    {
+      "asset": "parts/weapons-atlas-v1.png",
+      "label": "Grand Slam 大剑",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        0,
+        543,
+        744
+      ]
+    }
+  ],
+  "12": [
+    {
+      "asset": "parts/weapons-atlas-v1.png",
+      "label": "光束步枪",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        543,
+        0,
+        543,
+        730
+      ]
+    }
+  ],
+  "13": [
+    {
+      "asset": "parts/weapons-atlas-v1.png",
+      "label": "盾牌",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        748,
+        543,
+        700
+      ]
+    }
+  ],
+  "14": [
+    {
+      "asset": "parts/weapons-atlas-v1.png",
+      "label": "破甲短刀（双）",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        543,
+        748,
+        543,
+        700
+      ]
+    }
+  ]
+}

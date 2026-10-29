@@ -1,0 +1,194 @@
+{
+  "1": [
+    {
+      "asset": "parts/upper-atlas-v1.png",
+      "label": "躯干",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        0,
+        543,
+        680
+      ]
+    }
+  ],
+  "2": [
+    {
+      "asset": "parts/upper-atlas-v1.png",
+      "label": "头部",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        543,
+        0,
+        543,
+        680
+      ]
+    }
+  ],
+  "3": [
+    {
+      "asset": "parts/upper-atlas-v1.png",
+      "label": "左臂",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        680,
+        543,
+        768
+      ]
+    }
+  ],
+  "4": [
+    {
+      "asset": "parts/upper-atlas-v1.png",
+      "label": "右臂",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        543,
+        680,
+        543,
+        768
+      ]
+    }
+  ],
+  "5": [
+    {
+      "asset": "parts/lower-atlas-v1.png",
+      "label": "腰胯",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        140,
+        600,
+        500
+      ]
+    }
+  ],
+  "6": [
+    {
+      "asset": "parts/lower-atlas-v1.png",
+      "label": "左腿",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        650,
+        0,
+        436,
+        790
+      ]
+    }
+  ],
+  "7": [
+    {
+      "asset": "parts/lower-atlas-v1.png",
+      "label": "右腿",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        690,
+        530,
+        758
+      ]
+    }
+  ],
+  "8": [
+    {
+      "asset": "parts/equipment-atlas-v1.png",
+      "label": "腰部推进器（双）",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        40,
+        543,
+        705
+      ]
+    }
+  ],
+  "9": [
+    {
+      "asset": "parts/lower-atlas-v1.png",
+      "label": "背包",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        543,
+        800,
+        543,
+        648
+      ]
+    }
+  ],
+  "10": [
+    {
+      "asset": "parts/equipment-atlas-v1.png",
+      "label": "剑锤",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        550,
+        0,
+        536,
+        770
+      ]
+    }
+  ],
+  "11": [
+    {
+      "asset": "parts/equipment-atlas-v1.png",
+      "label": "双锤",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        0,
+        780,
+        543,
+        668
+      ]
+    }
+  ],
+  "12": [
+    {
+      "asset": "parts/equipment-atlas-v1.png",
+      "label": "腕部 200mm 炮（双）",
+      "image": [
+        1086,
+        1448
+      ],
+      "bounds": [
+        543,
+        750,
+        543,
+        698
+      ]
+    }
+  ]
+}

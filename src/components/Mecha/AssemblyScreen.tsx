@@ -11,6 +11,7 @@ import { useAppStore } from '../../store/useAppStore'
 export function AssemblyScreen() {
   const mechaId = useAppStore((state) => state.assembly.mechaId)
   const manifest = getMechaManifest(mechaId)
+  const columns = manifest.totalStages > 9 ? 4 : 3
   const reduceMotion = useReducedMotion()
   const [assembled, setAssembled] = useState(false)
 
@@ -43,7 +44,13 @@ export function AssemblyScreen() {
               />
             </motion.div>
           ) : (
-            <div className="assembly-parts">
+            <div
+              className="assembly-parts"
+              style={{
+                gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                gridTemplateRows: `repeat(${Math.ceil(manifest.totalStages / columns)}, minmax(0, 1fr))`,
+              }}
+            >
               {manifest.stages.map((part) => (
                 <motion.div
                   key={part.stage}

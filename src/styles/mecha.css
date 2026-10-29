@@ -142,7 +142,8 @@
   padding: 16px;
 }
 .assembly-part-tile {
-  height: 125px;
+  height: 100%;
+  min-height: 0;
   min-width: 0;
   overflow: hidden;
 }

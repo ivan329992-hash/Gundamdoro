@@ -1,3 +1,9 @@
+export interface MechaCanon {
+  pilot: { name: string; affiliation: string; brief: string }
+  debut: { work: string; detail: string }
+  highlights: { title: string; context: string; detail: string }[]
+}
+
 export interface MechaProfile {
   codename: string
   role: string
@@ -5,6 +11,7 @@ export interface MechaProfile {
   story: string
   features: string[]
   ratings: { armor: number; mobility: number; firepower: number }
+  canon?: MechaCanon
 }
 
 export const mechaProfiles: Record<string, MechaProfile> = {
@@ -67,16 +74,112 @@ export const mechaProfiles: Record<string, MechaProfile> = {
     ratings: { armor: 61, mobility: 98, firepower: 79 },
   },
   'wing-zero-ew': {
-    codename: '白翼 / WHITE WINGS',
-    role: '羽翼展示机',
-    origin: '非官方同人 · 以下为应用内演绎，非官方资料',
+    codename: 'WING GUNDAM ZERO / EW',
+    role: '高火力突击型',
+    origin: '非官方同人素材 · 原作资料摘要',
     story:
-      '在这座虚构机库里，白色羽翼被视作完成漫长制作的纪念。工程人员逐件检查躯干、头部、双臂与腿部，最后才为它展开独立收藏的羽翼。本段仅描述应用内的展示情境，不代表原作世界观或官方机体故事。',
+      '飞翼零式在《无尽的华尔兹》中的羽翼设计。原本被送往太阳废弃的机体，在巴顿叛乱爆发后被回收，希罗再次驾驶它迎击玛丽梅亚军。羽翼不只是外观标志，也能在大气层突入时包裹机体提供防护。',
     features: [
-      '羽翼作为第六个独立收藏配件',
-      '采用用户提供的生成同人素材',
-      '最终整机展示不额外消耗专注次数',
+      '双管破坏步枪与羽翼状背部组件',
+      'EW 设计与 TV 版在设定上为同一机体',
+      '当前收藏包含七个身体配件与独立羽翼',
     ],
     ratings: { armor: 75, mobility: 98, firepower: 95 },
+    canon: {
+      pilot: {
+        name: '希罗·尤伊',
+        affiliation: '原殖民地独立组织行动人员',
+        brief:
+          '在战后逐渐理解生命与和平的意义。得知莉莉娜遭绑架后重新行动，驾驶回收的飞翼零式阻止新的战争。',
+      },
+      debut: {
+        work: '《新机动战记高达W 无尽的华尔兹》',
+        detail: '1997 年 OVA。此处记录羽翼造型的 EW 设计，不与 TV 版的首次登场混用。',
+      },
+      highlights: [
+        {
+          title: '回收零式，重返战场',
+          context: '巴顿叛乱',
+          detail: '原本驶向太阳的废弃机体被重新回收，成为希罗对抗玛丽梅亚军的座机。',
+        },
+        {
+          title: '卫星轨道交锋',
+          context: '与五飞的再会',
+          detail: '在轨道上与五飞驾驶的双头龙交战；两位昔日战友围绕战斗与正义的意义发生冲突。',
+        },
+      ],
+    },
+  },
+  'perfect-strike': {
+    codename: 'PERFECT STRIKE / GAT-X105',
+    role: '多重突击装备型',
+    origin: '非官方同人素材 · 原作资料摘要',
+    story:
+      '在强袭高达上同时整合空战、剑装与炮装三套装备的完全武装形态。它在《SEED HD重制版》的欧布防卫战中投入战斗，由穆·拉·弗拉达驾驶。本应用的外观参考为 MG Grand Slam 装备型，模型附属大剑与动画登场形态分开说明。',
+    features: [
+      '多重突击背包整合空战、近战与炮击装备',
+      '空战背包附带额外电池组',
+      'MG 参考套件另附 Grand Slam 大剑、步枪与盾牌',
+    ],
+    ratings: { armor: 84, mobility: 72, firepower: 96 },
+    canon: {
+      pilot: {
+        name: '穆·拉·弗拉达',
+        affiliation: '大天使号',
+        brief: '在欧布防卫战中驾驶完美强袭作战。本档案不将强袭其他装备形态的战绩计入完美强袭。',
+      },
+      debut: {
+        work: '《机动战士高达 SEED HD重制版》',
+        detail: 'PHASE-38《决意的炮火》（HD 重制版序号 36），欧布防卫战。',
+      },
+      highlights: [
+        {
+          title: '欧布防卫战出击',
+          context: 'PHASE-38《决意的炮火》',
+          detail: '以三套装备同时搭载的形态出战，迎击进攻欧布的地球联合军。',
+        },
+        {
+          title: '三装协同作战',
+          context: '欧布防卫战',
+          detail: '在防卫战中发挥多重突击装备的综合能力，承担近距离交战与远程火力支援。',
+        },
+      ],
+    },
+  },
+  'barbatos-lupus': {
+    codename: 'BARBATOS LUPUS / ASW-G-08',
+    role: '高机动近战型',
+    origin: '非官方同人素材 · 原作资料摘要',
+    story:
+      '巴巴托斯在岁星接受全面整修后形成的天狼座形态。改修以三日月的战斗数据为依据，提升反应速度与机动性，并让阿赖耶识系统下的机体动作更接近驾驶员的感受。剑锤等武装也围绕其近战习惯重新配置。',
+    features: [
+      '外露的高达骨架与轻量装甲',
+      '阿赖耶识系统配合驾驶员进行动作控制',
+      '剑锤、双锤与腕部 200mm 炮',
+    ],
+    ratings: { armor: 70, mobility: 96, firepower: 82 },
+    canon: {
+      pilot: {
+        name: '三日月·奥古斯',
+        affiliation: '铁华团',
+        brief: '铁华团的主力 MS 驾驶员。天狼座的机体调校与武装配置，都针对他的战斗方式进行调整。',
+      },
+      debut: {
+        work: '《机动战士高达 铁血的奥尔芬斯》第二季',
+        detail: '第 26 集《新的血》，以改修后的天狼座形态登场。',
+      },
+      highlights: [
+        {
+          title: '迎击黎明地平线团',
+          context: '第 26–28 集',
+          detail: '作为铁华团主力参加与宇宙海贼的交战，运用改修后的机动性和近战装备迎敌。',
+        },
+        {
+          title: '与哈斯蒙的死斗',
+          context: '第 38 集',
+          detail: '在与巨大机动装甲哈斯蒙的战斗中解除限制，发挥机体潜能，也为此付出了沉重代价。',
+        },
+      ],
+    },
   },
 }

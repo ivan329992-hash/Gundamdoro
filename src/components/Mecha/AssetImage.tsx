@@ -1,5 +1,5 @@
 /** 【组件】统一图片加载失败 → MECHA ASSET ERROR + Retry（不改业务进度）。 */
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { ImageViewport } from '../../adapters/assets/stagePresentation'
 
 interface AssetImageProps {
@@ -10,6 +10,7 @@ interface AssetImageProps {
 }
 
 export function AssetImage({ src, alt, className, viewport }: AssetImageProps) {
+  const clipId = useId()
   const [failed, setFailed] = useState(false)
   const [retry, setRetry] = useState(0)
 
@@ -41,12 +42,25 @@ export function AssetImage({ src, alt, className, viewport }: AssetImageProps) {
         aria-label={alt}
         overflow="hidden"
       >
-        <image
-          href={src}
-          width={viewport.image[0]}
-          height={viewport.image[1]}
-          onError={() => setFailed(true)}
-        />
+        <defs>
+          <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+            <rect
+              x={viewport.bounds[0]}
+              y={viewport.bounds[1]}
+              width={viewport.bounds[2]}
+              height={viewport.bounds[3]}
+            />
+          </clipPath>
+        </defs>
+        {/* viewBox 的留白区仍可能显示邻图，必须按源图坐标明确裁切。 */}
+        <g clipPath={`url(#${clipId})`}>
+          <image
+            href={src}
+            width={viewport.image[0]}
+            height={viewport.image[1]}
+            onError={() => setFailed(true)}
+          />
+        </g>
       </svg>
     )
   return (

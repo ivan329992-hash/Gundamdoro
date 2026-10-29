@@ -1,0 +1,93 @@
+{
+  "id": "perfect-strike",
+  "name": "完美强袭高达",
+  "description": "Grand Slam 装备型 · 非官方同人",
+  "totalStages": 14,
+  "finalAsset": "final/assembled-v2.png",
+  "stages": [
+    {
+      "stage": 1,
+      "name": "TORSO",
+      "asset": "parts/torso-atlas-v1.png",
+      "slot": "torso"
+    },
+    {
+      "stage": 2,
+      "name": "HEAD",
+      "asset": "parts/upper-atlas-v1.png",
+      "slot": "head"
+    },
+    {
+      "stage": 3,
+      "name": "LEFT ARM",
+      "asset": "parts/upper-atlas-v1.png",
+      "slot": "left-arm"
+    },
+    {
+      "stage": 4,
+      "name": "RIGHT ARM",
+      "asset": "parts/upper-atlas-v1.png",
+      "slot": "right-arm"
+    },
+    {
+      "stage": 5,
+      "name": "HIP UNIT",
+      "asset": "parts/lower-atlas-v1.png",
+      "slot": "hips"
+    },
+    {
+      "stage": 6,
+      "name": "LEFT LEG",
+      "asset": "parts/lower-atlas-v1.png",
+      "slot": "left-leg"
+    },
+    {
+      "stage": 7,
+      "name": "RIGHT LEG",
+      "asset": "parts/lower-atlas-v1.png",
+      "slot": "right-leg"
+    },
+    {
+      "stage": 8,
+      "name": "AILE STRIKER",
+      "asset": "parts/strikers-atlas-v1.png",
+      "partId": "aile-striker"
+    },
+    {
+      "stage": 9,
+      "name": "LAUNCHER STRIKER",
+      "asset": "parts/strikers-atlas-v1.png",
+      "partId": "launcher-striker"
+    },
+    {
+      "stage": 10,
+      "name": "SWORD STRIKER",
+      "asset": "parts/strikers-atlas-v1.png",
+      "partId": "sword-striker"
+    },
+    {
+      "stage": 11,
+      "name": "GRAND SLAM",
+      "asset": "parts/weapons-atlas-v1.png",
+      "partId": "grand-slam"
+    },
+    {
+      "stage": 12,
+      "name": "BEAM RIFLE",
+      "asset": "parts/weapons-atlas-v1.png",
+      "partId": "beam-rifle"
+    },
+    {
+      "stage": 13,
+      "name": "SHIELD",
+      "asset": "parts/weapons-atlas-v1.png",
+      "partId": "shield"
+    },
+    {
+      "stage": 14,
+      "name": "ARMOR SCHNEIDERS",
+      "asset": "parts/weapons-atlas-v1.png",
+      "partId": "armor-schneiders"
+    }
+  ]
+}

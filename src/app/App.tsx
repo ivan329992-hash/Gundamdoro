@@ -23,6 +23,7 @@ import { canSelectMecha } from '../domain/collection'
 import { ModelSelectionScreen } from '../components/Mecha/ModelSelectionScreen'
 import { InventoryScreen } from '../components/Inventory/InventoryScreen'
 import { EstimatedEnd } from '../components/Timer/EstimatedEnd'
+import { FocusDurationPicker } from '../components/Timer/FocusDurationPicker'
 import { TimerExperienceTools } from '../components/Timer/TimerExperience'
 import { useTimerExperience } from '../hooks/useTimerExperience'
 import { prepareSound } from '../adapters/platform/reminders'
@@ -247,19 +248,10 @@ function AppContent() {
         )}
         {/* 快捷时长仅在待机且尚未集齐时显示，更新下次专注配置，不修改已启动计时的时长。 */}
         {phase === 'READY' && !allPartsCollected && (
-          <div className="quick-durations" aria-label="快捷专注时长">
-            {[15, 25, 45].map((minutes) => (
-              <button
-                key={minutes}
-                type="button"
-                className="secondary-button"
-                aria-pressed={settings.focusMinutes === minutes}
-                onClick={() => updateSettings({ focusMinutes: minutes })}
-              >
-                {minutes} 分钟
-              </button>
-            ))}
-          </div>
+          <FocusDurationPicker
+            minutes={settings.focusMinutes}
+            onChange={(focusMinutes) => updateSettings({ focusMinutes })}
+          />
         )}
         {/* 待机主按钮按收集状态切换为开始专注或拼装；开始专注时利用用户点击预先解锁音频播放。 */}
         {phase === 'READY' &&
