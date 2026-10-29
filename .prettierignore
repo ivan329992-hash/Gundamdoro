@@ -1,8 +1,0 @@
-node_modules/
-dist/
-output/
-docs/
-src-tauri/
-src/assets/
-src/mecha/**/*.json
-package-lock.json

@@ -120,22 +120,6 @@ npx tauri dev
 
 在完成 `npm ci` 后运行以上命令。Tauri 会自动启动前端开发服务，请先停止独立运行的 `npm run dev`，避免端口冲突。
 
-### 运行检查
-
-| 命令 | 用途 |
-| --- | --- |
-| `npm run lint` | 静态代码检查 |
-| `npm run format:check` | 格式检查 |
-| `npm test` | 单元与组件测试 |
-| `npx tsc -b` | TypeScript 类型检查 |
-| `npm run test:e2e` | Playwright 浏览器端到端测试 |
-
-首次运行端到端测试前，安装 Chromium：
-
-```powershell
-npx playwright install chromium
-```
-
 ## 构建与部署
 
 ### Windows 安装包
@@ -153,13 +137,13 @@ npm run build
 npm run preview -- --host 127.0.0.1 --port 4173
 ```
 
-构建结果位于 `dist/`，可在 [http://127.0.0.1:4173/](http://127.0.0.1:4173/) 本地预览。正式部署时，将该目录内容发布到静态托管服务，无需后端或数据库；`npm run preview` 仅用于本地预览。
+`npm run build` 会先执行 TypeScript 类型检查，再将网页构建到 `dist/`，可在 [http://127.0.0.1:4173/](http://127.0.0.1:4173/) 本地预览。正式部署时，将该目录内容发布到静态托管服务，无需后端或数据库；`npm run preview` 仅用于本地预览。
 
 默认部署于站点根路径，子目录部署需修改 `vite.config.ts` 中的 `base` 后重新构建。正式站点应使用 HTTPS，并支持 OPFS 和 Web Crypto，以使用机型导入及备份恢复。
 
 ## 项目结构
 
-前端采用 React 19、TypeScript、Vite 和 Zustand，动画使用 Framer Motion；桌面集成由 Tauri 2 与 Rust 提供，测试使用 Vitest 和 Playwright。
+前端采用 React 19、TypeScript、Vite 和 Zustand，动画使用 Framer Motion；桌面集成由 Tauri 2 与 Rust 提供。
 
 ```text
 Gundamdoro/
@@ -175,7 +159,6 @@ Gundamdoro/
 │  ├─ assets/mecha/      # 内置机型图片
 │  └─ styles/            # 全局与各界面样式
 ├─ src-tauri/            # Rust 桌面程序、权限与打包配置
-├─ tests/                # 架构、素材及端到端测试
 ├─ public/               # 网站图标等静态资源
 └─ SPEC.md               # 产品需求与行为约定
 ```
@@ -194,7 +177,7 @@ Gundamdoro/
 
 欢迎通过 [Issues](https://github.com/ivan329992-hash/Gundamdoro/issues) 反馈问题或提出建议。报告故障时请提供运行版本、操作系统、网页或桌面环境、复现步骤和截图。
 
-提交代码前，请运行静态检查、格式检查及相关测试；涉及交互流程的修改，请同时验证端到端测试。新增机型素材需注明来源和使用许可。
+提交修改前，请确保项目能够构建，并验证受影响的功能。新增机型素材需注明来源和使用许可。
 
 ## 许可证与素材说明
 

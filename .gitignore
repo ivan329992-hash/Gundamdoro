@@ -6,3 +6,17 @@ src-tauri/target/
 src-tauri/gen/
 output/
 /docs/
+
+# 本地测试、检查与校准工具
+/tests/
+/src/test/
+/src/dev/
+/src-tauri/tests/
+*.test.*
+/playwright.config.ts
+/tsconfig.e2e.json
+/eslint.config.js
+/.prettierrc.json
+/.prettierignore
+/.github/images/README.md
+/.github/images/workbench.png
