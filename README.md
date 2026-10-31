@@ -6,7 +6,7 @@ Gundamdoro 是一款结合机甲收集的 Windows 桌面番茄钟。每完成一
 
 应用支持离线使用和网页运行，无需注册账号，进度与导入素材均保存在本地。
 
-[下载 Windows x64 安装包](https://github.com/ivan329992-hash/Gundamdoro/releases/download/v0.1.0/Gundamdoro_0.1.0_x64_en-US.msi) · [查看版本说明](https://github.com/ivan329992-hash/Gundamdoro/releases/tag/v0.1.0)
+[下载 Windows x64 安装包](https://github.com/ivan329992-hash/Gundamdoro/releases/download/v0.1.1/Gundamdoro_0.1.1_x64_en-US.msi) · [查看版本说明](https://github.com/ivan329992-hash/Gundamdoro/releases/tag/v0.1.1)
 
 [功能预览](#功能预览) · [安装与使用](#安装与使用) · [本地开发](#本地开发) · [构建与部署](#构建与部署) · [项目结构](#项目结构) · [许可证](#许可证与素材说明)
 
@@ -90,7 +90,7 @@ Gundamdoro 是一款结合机甲收集的 Windows 桌面番茄钟。每完成一
 
 ### Windows 安装版
 
-下载 [v0.1.0 Windows x64 安装包](https://github.com/ivan329992-hash/Gundamdoro/releases/download/v0.1.0/Gundamdoro_0.1.0_x64_en-US.msi)，双击 `.msi` 并按向导完成安装。版本说明与文件校验值见 [Releases](https://github.com/ivan329992-hash/Gundamdoro/releases/tag/v0.1.0)。
+下载 [v0.1.1 Windows x64 安装包](https://github.com/ivan329992-hash/Gundamdoro/releases/download/v0.1.1/Gundamdoro_0.1.1_x64_en-US.msi)，双击 `.msi` 并按向导完成安装。版本说明与文件校验值见 [Releases](https://github.com/ivan329992-hash/Gundamdoro/releases/tag/v0.1.1)。
 
 支持 Windows x64，需要 Microsoft Edge WebView2 Runtime。运行安装版不需要安装 Node.js 或 Rust；macOS 与 Linux 暂未提供经过验证的发行版。
 
@@ -190,6 +190,8 @@ Gundamdoro/
 进度和设置使用 localStorage 保存；导入的机型图片在网页端使用浏览器 OPFS，在桌面端保存在应用本地数据目录。当前没有账号、云同步或自动更新。
 
 网页存档按浏览器和站点来源隔离，切换域名或端口不会自动带入原有进度；网页与桌面应用之间也不共享存档。迁移时使用“设置 → 备份与恢复”，清理浏览器数据前请先备份。
+
+首次使用且没有历史存档时，从 0 个配件开始，默认专注 25 分钟、休息 5 分钟。重新下载或安装程序不会主动清空旧进度；如果本机仍保留应用数据，启动时会继续读取。只想重新选择机型时，可点击“放弃并换机型”，永久库存和历史成品仍会保留。
 
 ## 反馈与贡献
 
